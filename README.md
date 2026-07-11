@@ -61,13 +61,14 @@ If anything goes wrong, simply rename the backup to the original save filename a
 # Usage
 
 1. Make sure your Dynasty save is **not open** in-game.
-2. Launch the Jersey ReNumber Tool.
-3. Select your Dynasty save.
-4. Confirm the selected Dynasty.
-5. Confirm whether or not you would like to run the tool for user-controlled teams.
-6. Wait for processing to complete.
-7. Review the changes displayed by the tool.
-8. Launch the game.
+2. Extract folder
+3. Launch the Jersey ReNumber Tool.exe.
+4. Select your Dynasty save.
+5. Confirm the selected Dynasty.
+6. Confirm whether or not you would like to run the tool for user-controlled teams.
+7. Wait for processing to complete.
+8. Review the changes displayed by the tool.
+9. Launch the game.
 
 ---
 
