@@ -2,7 +2,7 @@
 
 Automatically assigns realistic jersey numbers to players in **EA Sports College Football 27 Dynasty Mode** while following modern college football numbering conventions.
 
-The tool analyzes every eligible player on your roster and intelligently assigns legal, position-appropriate jersey numbers while minimizing unnecessary changes.
+The tool analyzes every eligible player on your roster and intelligently assigns jersey numbers in a way that feels true to what you see on Saturdays.
 
 
 # How the Tool Works
