@@ -72,6 +72,7 @@ If anything goes wrong, simply rename the backup to the original save filename a
 # Notes
 
 - This tool only modifies jersey numbers.
+- NIL players are automatically skipped and retain their assigned jersey numbers to preserve real-world player likenesses.
 - No player ratings, attributes, tendencies, equipment, recruiting data, or other Dynasty information are changed.
 - Existing backups are never overwritten.
 - Running the tool multiple times is safe.
