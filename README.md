@@ -4,52 +4,16 @@ Automatically assigns realistic jersey numbers to players in **EA Sports College
 
 The tool analyzes every eligible player on your roster and intelligently assigns legal, position-appropriate jersey numbers while minimizing unnecessary changes.
 
----
-
-# Features
-
-- Realistic jersey numbering by position
-- Prioritizes upperclassmen over younger players
-- Quarterbacks receive first choice of premium QB numbers
-- Fullbacks receive lowest priority to minimize conflicts
-- Preserves existing legal jersey numbers whenever possible
-- Automatically resolves duplicate jersey numbers
-- Creates a backup before making any changes
-- Works directly with Dynasty save files
-
----
-
-# Supported Positions
-
-The following positions are evaluated by the tool:
-
-- QB
-- HB
-- FB
-- WR
-- TE
-- DE
-- LOLB
-- MLB
-- ROLB
-- CB
-- FS
-- SS
-
-Players at other positions are left unchanged.
-
----
 
 # How the Tool Works
 
 For every supported player, the tool:
 
-1. Determines whether the player's current jersey number is legal for their position.
-2. Keeps legal numbers whenever possible.
-3. Assigns a preferred jersey number if a change is needed.
-4. Falls back to secondary ranges if preferred numbers are unavailable.
-5. Resolves duplicate jersey numbers automatically.
-6. Saves the updated Dynasty file.
+1. Determines whether the player's current jersey number is within an acceptable range for their position.
+2. Assigns a preferred jersey number if a change is needed.
+3. Falls back to an emergency number if preferred numbers are unavailable.
+4. Resolves duplicate jersey numbers automatically.
+5. Saves the updated Dynasty file.
 
 ---
 
@@ -57,7 +21,7 @@ For every supported player, the tool:
 
 When multiple players compete for the same jersey number, priority is determined by:
 
-1. Quarterbacks
+1. Position (Quarterbacks choose above all, Fullbacks choose last)
 2. School Year
 3. Previous Redshirt Status
 4. Overall Rating
@@ -70,29 +34,13 @@ This helps simulate how jersey numbers are typically assigned within a real coll
 
 The tool can be run at two different points during the offseason.
 
-## Option 1 — National Signing Day (Recommended)
+## Option 1 — National Signing Day
 
-Only players currently on your roster are renumbered.
-
-Incoming recruits and transfers added after National Signing Day will receive jersey numbers using the game's default assignment logic.
-
-**Advantages**
-
-- Fewer jersey changes
-- Better continuity between seasons
-- Faster processing
-
----
+Only players currently on your roster are renumbered. This gives returning players priority over incoming players. Incoming recruits and transfers added after National Signing Day will receive jersey numbers using the game's default assignment logic unless you run the tool again.
 
 ## Option 2 — Preseason Week
 
-The entire roster is renumbered, including:
-
-- Returning players
-- Incoming freshmen
-- New transfers
-
-This produces the most consistent roster because every player is evaluated using the same numbering rules.
+The entire roster is renumbered including returning players, transfers, and incoming freshmen. Waiting to run until this week would give incoming transfers/freshman priority, as the game's default number assignment logic will have already filled them into available preferred numbers.
 
 ---
 
@@ -100,26 +48,19 @@ This produces the most consistent roster because every player is evaluated using
 
 Before making any changes, the tool automatically creates a backup of your Dynasty save.
 
-If anything goes wrong, simply restore the backup manually by replacing the modified save with the backup copy.
+If anything goes wrong, simply restore the backup manually by RENAMING IT TO THE ORIGINAL NAME and replacing the modified save with the backup copy.
 
 ---
 
 # Usage
 
-1. Close College Football 27.
+1. Make sure your dynasty save is not open in-game.
 2. Launch the Jersey Renumber Tool.
 3. Select your Dynasty save.
 4. Confirm the selected Dynasty.
 5. Wait for processing to complete.
-6. Launch the game.
-
----
-
-# Requirements
-
-- EA Sports College Football 27
-- Windows
-- Dynasty save files
+6. Feel free to scroll through and review changes within the tool.
+7. Launch the game.
 
 ---
 
@@ -134,27 +75,11 @@ If anything goes wrong, simply restore the backup manually by replacing the modi
 
 # Frequently Asked Questions
 
-## Will this corrupt my Dynasty?
-
-No.
-
-The tool creates a backup before making any modifications.
-
----
-
 ## Can I run it more than once?
 
 Yes.
 
 The tool only changes players whose jersey numbers need to be updated.
-
----
-
-## Why didn't every player receive a new number?
-
-This is intentional.
-
-Players already wearing legal, position-appropriate numbers will generally keep them.
 
 ---
 
@@ -168,6 +93,7 @@ The current version only evaluates:
 - WR
 - TE
 - DE
+- DT
 - LOLB
 - MLB
 - ROLB
@@ -175,28 +101,14 @@ The current version only evaluates:
 - FS
 - SS
 
-Other positions are intentionally ignored.
+OL/K/P are intentionally ignored at this moment.
 
 ---
 
-## Will recruits receive new jersey numbers?
+# Known Limitations at this moment
 
-It depends on when you run the tool.
-
-**National Signing Day**
-
-Only current roster players are renumbered.
-
-**Preseason**
-
-Everyone on the roster is renumbered, including incoming freshmen and transfers.
-
----
-
-# Known Limitations
-
-- Offensive linemen are not currently renumbered.
-- Specialists (K, P, LS) are not currently renumbered.
+- Offensive linemen are not currently processed by the renumber tool.
+- Specialists (K, P) are not currently processed by the renumber tool.
 - Team-specific numbering traditions are not considered.
 - Jersey retirement and honored numbers are not tracked.
 
@@ -207,16 +119,17 @@ Everyone on the roster is renumbered, including incoming freshmen and transfers.
 ## Version 1.0
 
 - Initial public release
-- Automatic backups
-- Position-based jersey assignment
-- Duplicate resolution
-- Veteran priority system
-- Quarterback priority
-- Fullback support
-- Modern NCAA jersey numbering rules
+
+---
+
+# Credit
+
+Thank you to chunky for open sourcing his recruit commitment tool which gave me a good example project to look at since this is the first tool I've made.  And to KivJoy for pointing me in the right directions and for his coaching carousel tool that I also used as an example project
 
 ---
 
 # Disclaimer
 
 This project is an unofficial community tool and is not affiliated with or endorsed by Electronic Arts (EA), EA Sports, or College Football 27.
+
+
