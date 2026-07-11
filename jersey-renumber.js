@@ -436,6 +436,14 @@ async function main() {
             const validationResults = validateTeamGroups(teamGroups, teamNames);
             printValidationResults(validationResults);
 
+            await sleep(800);
+
+            console.log("\nSaving dynasty...");
+            await franchise.save();
+
+            await sleep(800);
+            console.log("Dynasty saved successfully!\n");
+
             if (!(await askRetry())) {
                 return;
             }
