@@ -13,7 +13,7 @@ For every supported player, the tool:
 2. Assigns a preferred jersey number if a change is needed. Some positions also have a chance to move from a secondary preferred range into a more desirable primary range when one becomes available (for example, a CB wearing #14 may attempt to move to an available single-digit number).
 3. When possible, prefers similar-looking jersey numbers (for example, a WR wearing #84 will first try #4, then #8, then #14 or $18 before selecting another preferred number).
 4. Falls back to an emergency number if preferred numbers are unavailable.
-5. Resolves duplicate jersey numbers automatically.
+5. Resolves duplicate jersey numbers on the same side of the ball automatically.
 6. Saves the updated Dynasty file.
 
 ---
@@ -22,7 +22,7 @@ For every supported player, the tool:
 
 When multiple players compete for the same jersey number, priority is determined by:
 
-1. Position (Quarterbacks choose above all, Fullbacks choose last)
+1. Position (Quarterbacks always choose first, Fullbacks always choose last)
 2. School Year
 3. Previous Redshirt Status
 4. Overall Rating
@@ -45,7 +45,7 @@ The entire roster is renumbered including returning players, transfers, and inco
 
 ---
 
-# Backups
+# Backups Guide
 
 Before making any changes, the tool automatically creates a backup of your Dynasty save.
 
