@@ -10,10 +10,11 @@ The tool analyzes every eligible player on your roster and intelligently assigns
 For every supported player, the tool:
 
 1. Determines whether the player's current jersey number is within an acceptable range for their position.
-2. Assigns a preferred jersey number if a change is needed.
-3. Falls back to an emergency number if preferred numbers are unavailable.
-4. Resolves duplicate jersey numbers automatically.
-5. Saves the updated Dynasty file.
+2. Assigns a preferred jersey number if a change is needed. Some positions also have a chance to move from a secondary preferred range into a more desirable primary range when one becomes available (for example, a CB wearing #14 may attempt to move to an available single-digit number).
+3. When possible, prefers similar-looking jersey numbers (for example, a WR wearing #84 will first try #4, then #14 before selecting another preferred number).
+4. Falls back to an emergency number if preferred numbers are unavailable.
+5. Resolves duplicate jersey numbers automatically.
+6. Saves the updated Dynasty file.
 
 ---
 
@@ -133,11 +134,14 @@ Some positions also include a **promoteChance** value. This gives players who ar
 For example:
 
 ```js
-preferred: [[0, 19], [80, 89]]
-promoteChance: 0.75
+WR: {
+        preferred: [[0, 19], [80, 89]],
+        fallback: [[36, 44]],
+        promoteChance: 0.75
+    },
 ```
 
-A player wearing an 80-series number has a **75% chance** each time the tool is run to attempt to move into an available 0–19 jersey. If no primary number is available—or the promotion check fails—they keep their current number.
+A WR wearing an 80-series number has a **75% chance** each time the tool is run to attempt to move into an available 0–19 jersey. If no primary number is available—or the promotion check fails—they keep their current number.
 
 # Known Limitations at this moment
 
@@ -158,7 +162,9 @@ A player wearing an 80-series number has a **75% chance** each time the tool is 
 
 # Credit
 
-Thank you to chunky for open sourcing his recruit commitment tool which gave me a good example project to look at since this is the first tool I've made.  And to KivJoy for pointing me in the right directions and for his coaching carousel tool that I also used as an example project
+Special thanks to **chunky** for open-sourcing his Recruit Commitment Tool, which gave me a great example project to learn from while building my first tool.
+
+Thanks also to **KivJoy** for pointing me in the right direction throughout development and for showing me his Coaching Carousel Tool, which I also used as a reference.
 
 ---
 
