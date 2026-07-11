@@ -123,20 +123,19 @@ Before making any changes, the tool automatically creates a timestamped backup o
 
 Existing backups are never overwritten.
 
-If necessary, simply restore the backup by replacing the modified save with the backup copy.
-
+If necessary, simply restore the backup by renaming the file to what it was orignally called.
 ---
 
 # Usage
 
-1. Close College Football 27.
+1. Make sure your dynasty save **is not** open in the game.
 2. Launch **CFB27_JerseyReNumberTool.exe**.
-3. Select your Dynasty save.
+3. Select a Dynasty save that is on National Signing Day (Position Changes) week, or Preseason.
 4. Confirm the selected Dynasty.
 5. Choose whether to process user-controlled teams.
 6. Wait for processing to complete.
 7. Review the summary.
-8. Launch the game.
+8. Done!
 
 ---
 
@@ -145,7 +144,6 @@ If necessary, simply restore the backup by replacing the modified save with the 
 - Only jersey numbers are modified.
 - NIL players are automatically skipped.
 - Ratings, equipment, recruiting data, abilities, contracts, schedules, and Dynasty information are untouched.
-- Running the tool multiple times is completely safe.
 
 ---
 
@@ -155,15 +153,21 @@ If necessary, simply restore the backup by replacing the modified save with the 
 
 No.
 
-Players already wearing an appropriate jersey number will generally keep their existing number unless they are selected for a promotion or involved in a duplicate-number conflict.
+Players already wearing an appropriate jersey number will generally keep their existing number unless they are selected for a promotion or involved in a duplicate-number conflict. NIL players are also untouched by this tool.
 
 ---
 
-## Can I run the tool multiple times?
+## When should I run this tool?
 
-Yes.
+## Option 1 — National Signing Day (Position Changes)
 
-The tool is designed to be safely run whenever desired.
+Only players currently on your roster are renumbered, incoming players are not. Running the tool in this week will result in more preferrable numbers for returning players, but less number continuity. Incoming recruits and transfers added after National Signing Day will fill in to unused jersey numbers using the game's default assignment logic when you sim.
+
+## Option 2 — Preseason
+
+The entire roster is renumbered at the same time, including returning players and any new players. Waiting until this week to run the tool will result in less preferrable numbers for returning players, but more number continuity. 
+
+These options are entirely personal preference.
 
 ---
 
@@ -212,6 +216,3 @@ Thanks also to **KivJoy** for answering countless questions throughout developme
 
 This project is an unofficial community tool and is not affiliated with or endorsed by Electronic Arts, EA SPORTS, or College Football 27.
 
-# Disclaimer
-
-This project is an unofficial community tool and is not affiliated with or endorsed by Electronic Arts (EA), EA Sports, or EA Sports College Football 27.
