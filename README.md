@@ -11,7 +11,7 @@ For every supported player, the tool:
 
 1. Determines whether the player's current jersey number is within an acceptable range for their position.
 2. Assigns a preferred jersey number if a change is needed. Some positions also have a chance to move from a secondary preferred range into a more desirable primary range when one becomes available (for example, a CB wearing #14 may attempt to move to an available single-digit number).
-3. When possible, prefers similar-looking jersey numbers (for example, a WR wearing #84 will first try #4, then #14 before selecting another preferred number).
+3. When possible, prefers similar-looking jersey numbers (for example, a WR wearing #84 will first try #4, then #8, then #14 or $18 before selecting another preferred number).
 4. Falls back to an emergency number if preferred numbers are unavailable.
 5. Resolves duplicate jersey numbers automatically.
 6. Saves the updated Dynasty file.
