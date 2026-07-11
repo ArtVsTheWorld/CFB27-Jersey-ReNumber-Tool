@@ -4,6 +4,8 @@ Automatically assigns realistic jersey numbers to players in **EA Sports College
 
 The tool analyzes every eligible player on your roster and intelligently assigns jersey numbers that better reflect what you see on Saturdays.
 
+<img width="1080" height="1080" alt="demogif" src="https://github.com/user-attachments/assets/c8d7f6f6-e7d8-4104-bbe3-3fe4e4cf77cb" />
+
 ---
 
 # How the Tool Works
