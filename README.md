@@ -1,23 +1,86 @@
 # CFB 27 Jersey ReNumber Tool
 
-Automatically assigns realistic jersey numbers to players in **EA Sports College Football 27 Dynasty Mode** while following modern college football numbering conventions.
+Automatically assigns realistic jersey numbers to players in **EA SPORTS College Football 27 Dynasty Mode** while following modern college football numbering conventions.
 
-The tool analyzes every eligible player on your roster and intelligently assigns jersey numbers that better reflect what you see on Saturdays.
+The tool intelligently renumbers eligible players using position-specific rules, resolves duplicate jersey conflicts, preserves realistic number distribution, and automatically creates a backup of your Dynasty before making any changes.
 
 <img width="1080" height="1080" alt="demogif" src="https://github.com/user-attachments/assets/c8d7f6f6-e7d8-4104-bbe3-3fe4e4cf77cb" />
 
 ---
 
-# How the Tool Works
+# Features
 
-For every supported player, the tool:
+- Automatically renumbers eligible offensive and defensive players.
+- Resolves duplicate jersey numbers on the same side of the ball.
+- Uses realistic position-specific jersey ranges.
+- Supports jersey promotions into premium number ranges.
+- Preserves NIL player jersey numbers.
+- Automatically creates timestamped backups.
+- Processes every team in the Dynasty or optionally skips user-controlled teams.
+- Displays a complete processing summary after completion.
 
-1. Determines whether the player's current jersey number falls within an acceptable range for their position.
-2. Assigns a preferred jersey number if a change is needed. Some positions also have a chance to move from a secondary preferred range into a more desirable primary range when one becomes available (for example, a CB wearing #14 may attempt to move to an available single-digit number).
-3. When possible, prefers similar-looking jersey numbers (for example, a WR wearing #84 will first try #4, then #8, then #14 or #18 before selecting another preferred number).
-4. Falls back to an emergency number if no preferred numbers are available.
-5. Automatically resolves duplicate jersey numbers on the same side of the ball.
-6. Saves the updated Dynasty file.
+---
+
+# Supported Positions
+
+### Offense
+
+- QB
+- HB
+- FB
+- WR
+- TE
+
+### Defense
+
+- LE
+- RE
+- DT
+- LOLB
+- MLB
+- ROLB
+- CB
+- FS
+- SS
+
+Offensive linemen and specialists (K/P) are intentionally excluded.
+
+---
+
+# Jersey Assignment Logic
+
+Each position has:
+
+- Preferred jersey ranges
+- Fallback ranges
+- Optional promotion chances
+
+Example:
+
+```js
+WR: {
+    preferred: [[0, 19], [80, 89]],
+    fallback: [[20, 39]],
+    promoteChance: 0.65
+}
+```
+
+Players already wearing a preferred jersey usually keep their number.
+
+Players wearing a secondary preferred range may occasionally be promoted into a more desirable range if an appropriate number becomes available.
+
+If no preferred number is available, the tool searches fallback ranges before using an emergency assignment.
+
+The assignment algorithm also attempts to preserve visually similar numbers whenever possible.
+
+Examples:
+
+- #84 → #4
+- #84 → #8
+- #84 → #14
+- #84 → #18
+
+before selecting other preferred numbers.
 
 ---
 
@@ -25,149 +88,129 @@ For every supported player, the tool:
 
 When multiple players compete for the same jersey number, priority is determined by:
 
-1. Position (Quarterbacks always choose first, Fullbacks always choose last.)
+1. Position
 2. Class Year
 3. Previous Redshirt Status
 4. Overall Rating
 
-This helps simulate how jersey numbers are typically assigned within a real college football program.
+This produces realistic roster-wide numbering without manual intervention.
 
 ---
 
-# When Should I Run the Tool?
+# Duplicate Resolution
 
-The tool can be run at two different points during the offseason.
+Duplicate jerseys are only prevented among players on the same side of the football.
 
-## Option 1 — National Signing Day
+Examples:
 
-Only players currently on your roster are renumbered, incoming players are not. Running the tool in this week will result in more preferrable numbers for returning players, but less number continuity. Incoming recruits and transfers added after National Signing Day will fill in to unused jersey numbers using the game's default assignment logic unless you run the tool again in preseason week.
+✅ QB #7 and CB #7
 
-## Option 2 — Preseason Week
+✅ WR #1 and FS #1
 
-The entire roster is renumbered at the same time, including returning players and incoming players. Waiting until this week to run the tool will result in more preferrable numbers for incoming players, and more number continuity. 
+Not allowed:
 
-These options are entirely personal preference.
+❌ QB #12 and WR #12
+
+❌ MLB #5 and CB #5
+
+This mirrors modern NCAA numbering rules.
 
 ---
 
-# Backups
+# Backup System
 
-Before making any changes, the tool automatically creates a backup of your Dynasty save.
+Before making any changes, the tool automatically creates a timestamped backup of your Dynasty save.
 
-If anything goes wrong, simply rename the backup to the original save filename and replace the modified save with the backup copy.
+Existing backups are never overwritten.
+
+If necessary, simply restore the backup by replacing the modified save with the backup copy.
 
 ---
 
 # Usage
 
-1. Make sure your Dynasty save is **not open** in-game.
-2. Extract folder
-3. Launch the Jersey ReNumber Tool.exe.
-4. Select your Dynasty save.
-5. Confirm the selected Dynasty.
-6. Confirm whether or not you would like to run the tool for user-controlled teams.
-7. Wait for processing to complete.
-8. Review the changes displayed by the tool.
-9. Launch the game.
+1. Close College Football 27.
+2. Launch **CFB27_JerseyReNumberTool.exe**.
+3. Select your Dynasty save.
+4. Confirm the selected Dynasty.
+5. Choose whether to process user-controlled teams.
+6. Wait for processing to complete.
+7. Review the summary.
+8. Launch the game.
 
 ---
 
 # Notes
 
-- This tool only modifies jersey numbers.
-- NIL players are automatically skipped and retain their assigned jersey numbers to preserve real-world player likenesses.
-- No player ratings, attributes, tendencies, equipment, recruiting data, or other Dynasty information are changed.
-- Existing backups are never overwritten.
-- Running the tool multiple times is safe.
+- Only jersey numbers are modified.
+- NIL players are automatically skipped.
+- Ratings, equipment, recruiting data, abilities, contracts, schedules, and Dynasty information are untouched.
+- Running the tool multiple times is completely safe.
 
 ---
 
 # Frequently Asked Questions
 
-## Will this change every player's jersey?
+## Will every player receive a new jersey?
 
 No.
 
-Players who already have appropriate jersey numbers will usually keep them. Only players with illegal, duplicate, or otherwise undesirable jersey numbers are changed.
+Players already wearing an appropriate jersey number will generally keep their existing number unless they are selected for a promotion or involved in a duplicate-number conflict.
 
 ---
 
-## Can I run it more than once?
+## Can I run the tool multiple times?
 
 Yes.
 
-The tool only changes players whose jersey numbers need to be updated. Running it multiple times is completely safe.
+The tool is designed to be safely run whenever desired.
 
 ---
 
-## Why wasn't my offensive lineman renumbered?
+## Why weren't offensive linemen renumbered?
 
-The current version only evaluates the following positions:
+Version 1.0 intentionally focuses on skill positions and front-seven defenders.
 
-- Offense: QB, HB, WR, TE, FB
-- Defense: DE, DT, MIKE, OLB, CB, S
-
-OLs, Kickers, and Punters are intentionally excluded in Version 1.0.
-
----
-
-## Jersey Assignment Logic
-
-Each position has one or more **preferred jersey ranges**, listed in order of priority.
-
-For example:
-
-```js
-preferred: [[0, 19], [80, 89]]
-```
-
-The tool will:
-
-1. Try to assign a jersey between **0–19** first.
-2. If none are available, try **80–89**.
-
-If no preferred numbers are available, the tool assigns a number from that position's fallback range.
-
-Some positions also include a `promoteChance` value. This gives players wearing a secondary preferred number a chance to "move up" into the primary preferred range each time the tool is run, provided a preferred number is available.
-
-For example:
-
-```js
-WR: {
-    preferred: [[0, 19], [80, 89]],
-    fallback: [[36, 44]],
-    promoteChance: 0.75
-}
-```
-
-A WR wearing an 80-series number has a **75% chance** each time the tool is run to attempt to move into an available 0–19 jersey. If no primary number is available—or the promotion check fails—the player keeps their current jersey number.
+Future versions may expand support.
 
 ---
 
 # Known Limitations
 
 - Offensive linemen are not currently processed.
-- Specialists (K/P) are not currently processed, as such you may run into situations where there are 3 of one number on a team. (One on offense, one on defense, one K/P)
-- Team-specific numbering traditions are not currently considered.
-- Retired or honored jersey numbers are not currently tracked.
+- Kickers and punters are not currently processed.
+- Team-specific numbering traditions are not considered.
+- Retired jersey numbers are not reserved.
 
 ---
 
-# Changelog
+# Version 1.0
 
-## Version 1.0
+Initial public release.
 
-- Initial public release.
+Features include:
+
+- Intelligent jersey assignment
+- Duplicate resolution
+- Promotion system
+- Automatic backups
+- User-team selection
+- Processing summaries
+- Safe repeated execution
 
 ---
 
 # Credits
 
-Special thanks to **chunky** for open-sourcing his Recruit Commitment Tool, which served as a great learning resource while I built my first modding tool.
+Special thanks to **chunky** for open-sourcing the Recruit Commitment Tool, which served as an excellent learning resource.
 
-Thanks also to **KivJoy** for answering countless questions throughout development and for sharing his Coaching Carousel Tool, which was another valuable reference.
+Thanks also to **KivJoy** for answering countless questions throughout development and for sharing the Coaching Carousel Tool.
 
 ---
+
+# Disclaimer
+
+This project is an unofficial community tool and is not affiliated with or endorsed by Electronic Arts, EA SPORTS, or College Football 27.
 
 # Disclaimer
 
