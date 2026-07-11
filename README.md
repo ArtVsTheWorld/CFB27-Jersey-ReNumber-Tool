@@ -75,6 +75,12 @@ If anything goes wrong, simply restore the backup manually by RENAMING IT TO THE
 
 # Frequently Asked Questions
 
+## Will this change every player's jersey?
+
+No.
+
+Players who already have appropriate jersey numbers will usually keep them. Only players with illegal, duplicate, or conflicting numbers are changed.
+
 ## Can I run it more than once?
 
 Yes.
@@ -104,6 +110,34 @@ The current version only evaluates:
 OL/K/P are intentionally ignored at this moment.
 
 ---
+
+## Jersey Assignment Logic
+
+Each position has one or more **preferred jersey ranges**, listed in order of priority.
+
+For example:
+
+```js
+preferred: [[0, 19], [80, 89]]
+```
+
+means the tool will:
+
+1. Try to assign a jersey between **0–19** first.
+2. If none are available, try **80–89**.
+
+If no preferred numbers are available, the tool assigns a number from that position's **fallback** range.
+
+Some positions also include a **promoteChance** value. This gives players who are wearing a secondary preferred number a chance to "move up" into the primary preferred range each time the tool is run, if a number becomes available.
+
+For example:
+
+```js
+preferred: [[0, 19], [80, 89]]
+promoteChance: 0.75
+```
+
+A player wearing an 80-series number has a **75% chance** each time the tool is run to attempt to move into an available 0–19 jersey. If no primary number is available—or the promotion check fails—they keep their current number.
 
 # Known Limitations at this moment
 
