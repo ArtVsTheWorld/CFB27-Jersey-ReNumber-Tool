@@ -172,7 +172,7 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 
 - Fixed a bug that was causing NIL players to not be accounted for when switching to a preferred number. If an NIL player and a generated players have the same number, the generated player will be moved.
 - Updated logic to only displace other players from duplicate numbers, not on promotions or corrections.
-- Fixed logic to correctly show displaced players.
+- Fixed logging to correctly show displaced players, and to show player OVR.
 - Updated naming convention on backups AGAIN. Sometimes if the filename is too long, they won't load. If that happens, manually rename the backup to something shorter and then it will work.
 - Cleaned up code.
 
