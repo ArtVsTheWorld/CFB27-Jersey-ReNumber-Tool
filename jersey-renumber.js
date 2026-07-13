@@ -1,14 +1,15 @@
-// ==========================================
-// CFB 27 Jersey ReNumber Tool
-// Main entry point
-// ==========================================
+// Table Unique IDs
+const PLAYER_TABLE_UID = 1612938518;
+const TEAM_TABLE_UID = 3359508968;
 
 // Import helper functions
 const fs = require("fs");
-const { resolveSavePath } = require("./savePicker");
+const { input, confirm } = require("@inquirer/prompts");
 const { openSave, readTable } = require("./lib/openSave");
 const { shouldProcess } = require("./lib/playerFilter");
 const {
+    isLegalNumber,
+    isPromotionEligible,
     needsRenumber,
     getRenumberReason
 } = require("./lib/numberRules");
@@ -17,12 +18,12 @@ const {
     resolveDuplicates,
     isNumberAvailable
 } = require("./lib/duplicateResolver");
+const RULES = require("./lib/rules");
 const { validateRoster } = require("./lib/validator");
 const { sortRoster } = require("./lib/playerSorter");
-const VERSION = "1.0";
+const VERSION = "1.5";
+const DEBUG = false
 
-
-const readline = require("readline");
 
 const MIN_JERSEY = 0;
 const MAX_JERSEY = 99;
@@ -56,32 +57,31 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function askYesNo(question) {
+async function promptForSave() {
 
-    while (true) {
+    const filePath = await input({
+        message: "Paste the full path to your Dynasty save, or drag and drop it here and press Enter:",
 
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        });
+        validate: (value) => {
 
-        const answer = await new Promise(resolve => {
-            rl.question(`${question} (Y/N): `, input => {
-                rl.close();
-                resolve(input.trim().toLowerCase());
-            });
-        });
+            const cleanPath = value.trim().replace(/^["']|["']$/g, "");
 
-        if (answer === "y" || answer === "yes")
+            if (!cleanPath.length)
+                return "Please enter a path.";
+
+            if (!fs.existsSync(cleanPath))
+                return "That dynasty save doesn't exist.";
+
+            const stats = fs.statSync(cleanPath);
+
+            if (!stats.isFile())
+                return "Please select the dynasty SAVE file, not the folder.";
+
             return true;
+        }
+    });
 
-        if (answer === "n" || answer === "no")
-            return false;
-
-        console.log("\nInvalid input. Please enter Y or N.\n");
-
-    }
-
+    return filePath.replace(/^["']|["']$/g, "");
 }
 
 function createBackup(savePath) {
@@ -89,12 +89,12 @@ function createBackup(savePath) {
     const timestamp =
         `${String(now.getFullYear()).slice(-2)}` +
         `${String(now.getMonth() + 1).padStart(2, "0")}` +
-        `${String(now.getDate()).padStart(2, "0")}-` +
+        `${String(now.getDate()).padStart(2, "0")}` +
         `${String(now.getHours()).padStart(2, "0")}` +
         `${String(now.getMinutes()).padStart(2, "0")}` +
         `${String(now.getSeconds()).padStart(2, "0")}`;
 
-    const backupPath = `${savePath}_backup_${timestamp}`;
+    const backupPath = `${savePath}backup${timestamp}`;
     fs.copyFileSync(savePath, backupPath);
     return backupPath;
 }
@@ -144,6 +144,7 @@ function buildTeamRosters(players, userControlledTeams, renumberUserTeams, sorte
 
 function buildTeamGroups(teamRosters) {
     const teamGroups = new Map();
+    
 
     for (const [teamIndex, roster] of teamRosters) {
         const offense = [];
@@ -174,26 +175,44 @@ function sortAndResolveTeamGroups(teamGroups) {
 
 function createStats() {
     return {
-        checked: 0,
+        playersEvaluated: 0,
 
         duplicateResolutions: 0,
         promotions: 0,
+        promtionEligible: 0,
         suboptimalCorrections: 0,
 
-        preferredRenumbers: 0,
-        fallbackRenumbers: 0,
+        primaryPreferredAssignments: 0,
+        secondaryPreferredAssignments: 0,
+        fallbackAssignments: 0,
+        fallbackAssignments: 0,
+        totalChanges: 0,
 
-        unchanged: 0
+        stillSuboptimal: 0
     };
 }
 
 function assignJersey(player, roster, candidates, teamName) {
     const oldNumber = player.JerseyNum;
     let selectedCandidateIndex = -1;
-    let wasRenumbered = false;
+    
+    if (DEBUG) {
+        console.log('assignJersey called for', player.FirstName, player.LastName, 'with old number', oldNumber, 'and candidates', candidates);
+    }
+
 
     for (let i = 0; i < candidates.length; i++) {
         const number = candidates[i];
+
+        if (!isLegalNumber({ ...player, JerseyNum: number })) {
+            console.log(
+                "ILLEGAL ASSIGNMENT",
+                player.Position,
+                player.JerseyNum,
+                "->",
+                number
+            );
+        }
 
         if (number === oldNumber)
             continue;
@@ -295,10 +314,11 @@ function assignJersey(player, roster, candidates, teamName) {
         }
     }
 
-    // If we reach this point, absolutely no number could be found/stolen
-    if (!wasRenumbered) {
 
-        console.log("\n==================== COULD NOT ASSIGN JERSEY ====================");
+    if (DEBUG) {
+        // If we reach this point, absolutely no number could be found/stolen.
+
+        console.log("\n==================== PLAYER KEPT CURRENT NUMBER. ====================");
 
         console.log(
             `${teamName}: ${player.FirstName} ${player.LastName} (${player.Position})`
@@ -307,6 +327,13 @@ function assignJersey(player, roster, candidates, teamName) {
         console.log(`Current Jersey : #${oldNumber}`);
 
         console.log(`Preferred Jerseys : ${candidates.join(", ")}`);
+
+        console.log(
+            "Promotion:",
+            player.isPromotionAttempt,
+            "Duplicate:",
+            player.mustRenumberDuplicate
+        );
 
         console.log("===========================================================\n");
 
@@ -347,6 +374,12 @@ async function processTeamGroups(teamGroups, teamNames) {
                 player.wasRenumberedThisRun = false;
             }
 
+            for (const player of team[side]) {
+
+                player.originalJerseyNum = player.JerseyNum;
+
+            }
+
             // ======================================================
             // PASS 1 - Promote Players Into Preferred Jersey Ranges
             // ======================================================
@@ -365,8 +398,9 @@ async function processTeamGroups(teamGroups, teamNames) {
 
                 // FIX: Force full candidate pool for duplicates
                 player.isPromotionAttempt = false;
-
-                const { candidates, fallbackStartIndex } = generateCandidates(player);
+                
+                
+                const { candidates } = generateCandidates(player);
                 const { wasRenumbered, selectedCandidateIndex, oldNumber } =
                     assignJersey(player, team[side], candidates, teamName);
                 
@@ -375,30 +409,38 @@ async function processTeamGroups(teamGroups, teamNames) {
                     resolveDuplicates(team[side]);
                 }
 
-                stats.checked++;
+                stats.playersEvaluated++;
 
                 if (wasRenumbered) {
-
+                    
+                    stats.totalChanges++;
                     stats.duplicateResolutions++;
 
-                    if (selectedCandidateIndex >= fallbackStartIndex) {
+                    const rule = RULES[player.Position];
 
-                        stats.fallbackRenumbers++;
+                    const primaryNumbers = new Set(rule.preferred[0]);
 
-                        console.log("\n==================== FALLBACK USED ====================");
+                    const secondaryNumbers = new Set(
+                        (rule.preferred.slice(1)).flat()
+                    );
 
-                        console.log(
-                            `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position})`
-                        );
+                    if (primaryNumbers.has(player.JerseyNum)) {
 
-                        console.log(`Original Jersey : #${oldNumber}`);
-                        console.log(`Fallback Jersey : #${player.JerseyNum}`);
+                        stats.primaryPreferredAssignments++;
 
-                        console.log("=======================================================\n");
+                    } else if (secondaryNumbers.has(player.JerseyNum)) {
+
+                        stats.secondaryPreferredAssignments++;
 
                     } else {
 
-                        stats.preferredRenumbers++;
+                        stats.fallbackAssignments++;
+
+                        if (DEBUG) {
+                            console.log(
+                                `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) : #${oldNumber} -> #${player.JerseyNum} [FALLBACK]`
+                            );
+                        }
 
                     }
 
@@ -406,9 +448,11 @@ async function processTeamGroups(teamGroups, teamNames) {
 
                 if (wasRenumbered) {
 
-                    console.log(
-                        `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) : #${oldNumber} -> #${player.JerseyNum}`
-                    );
+                    // if (DEBUG) {
+                        console.log(
+                            `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) : #${oldNumber} -> #${player.JerseyNum}`
+                        );
+                    // }
 
                 }
             }
@@ -429,54 +473,83 @@ async function processTeamGroups(teamGroups, teamNames) {
                 needsRenumber(player);
                 const reason = getRenumberReason(player);
 
+                if (isPromotionEligible(player)) {
+                    stats.promtionEligible++;
+                }
+
+                if (reason.suboptimal || reason.promotion || reason.duplicate) {
+
+                    if (DEBUG) {
+                        console.log(
+                            `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) | #${player.JerseyNum} |`,
+                            reason
+                        );
+                    }
+
+                }
+
                 if (reason.duplicate)
                     continue;
 
                 if (!reason.suboptimal && !reason.promotion)
                     continue;
 
-                const { candidates, fallbackStartIndex } = generateCandidates(player);
+                player.isPromotionAttempt = reason.promotion;
+
+                const { candidates } = generateCandidates(player);
                 const { wasRenumbered, selectedCandidateIndex, oldNumber } =
                     assignJersey(player, team[side], candidates, teamName);
 
-                stats.checked++;
+                stats.playersEvaluated++;
+
 
                 if (wasRenumbered) {
 
-                    if (reason.suboptimal) {
+                    stats.totalChanges++;
+
+                    const stillSuboptimal = !isLegalNumber(player);
+
+                    if (reason.suboptimal && !stillSuboptimal) {
                         stats.suboptimalCorrections++;
-                    } else {
+                    }
+
+                    if (reason.promotion) {
                         stats.promotions++;
                     }
 
-                    if (selectedCandidateIndex >= fallbackStartIndex) {
+                    const rule = RULES[player.Position];
 
-                        stats.fallbackRenumbers++;
+                    const primaryNumbers = new Set(rule.preferred[0]);
 
-                        console.log("\n==================== FALLBACK USED ====================");
+                    const secondaryNumbers = new Set(
+                        (rule.preferred.slice(1)).flat()
+                    );
 
-                        console.log(
-                            `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position})`
-                        );
+                    if (primaryNumbers.has(player.JerseyNum)) {
 
-                        console.log(`Original Jersey : #${oldNumber}`);
-                        console.log(`Fallback Jersey : #${player.JerseyNum}`);
+                        stats.primaryPreferredAssignments++;
 
-                        console.log("=======================================================\n");
+                    } else if (secondaryNumbers.has(player.JerseyNum)) {
+
+                        stats.secondaryPreferredAssignments++;
 
                     } else {
 
-                        stats.preferredRenumbers++;
+                        stats.fallbackAssignments++;
+
+                        if (DEBUG) {
+                            console.log(
+                                `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) : #${oldNumber} -> #${player.JerseyNum} [FALLBACK]`
+                            );
+                        }
 
                     }
-
-                    console.log(
-                        `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) : #${oldNumber} -> #${player.JerseyNum}`
-                    );
-
-                } else {
-
-                    stats.unchanged++;
+                    
+                    // if (DEBUG) {
+                        console.log(
+                            `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) : #${oldNumber} -> #${player.JerseyNum}`
+                        );
+                    // }
 
                 }
 
@@ -503,11 +576,14 @@ async function processTeamGroups(teamGroups, teamNames) {
                 const other = seen.get(player.JerseyNum);
 
                 if (other) {
-                    console.log(
-                        `FINAL DUPLICATE: ${teamName} ${side} #${player.JerseyNum}
-            ${other.FirstName} ${other.LastName}
-            ${player.FirstName} ${player.LastName}`
-                    );
+                    
+                    if (DEBUG) {
+                        console.log(
+                            `FINAL DUPLICATE: ${teamName} ${side} #${player.JerseyNum}
+                            ${other.FirstName} ${other.LastName}
+                            ${player.FirstName} ${player.LastName}`
+                        );
+                    }
                 }
 
                 seen.set(player.JerseyNum, player);
@@ -515,43 +591,124 @@ async function processTeamGroups(teamGroups, teamNames) {
         }
     }
 
+    // =====================================
+    // FINAL STATISTICS PASS
+    // =====================================
+
+    stats.stillSuboptimal = 0;
+
+    for (const [, team] of teamGroups) {
+
+        for (const side of ["offense", "defense"]) {
+
+            for (const player of team[side]) {
+
+                if (!isLegalNumber(player)) {
+                    stats.stillSuboptimal++;
+                    console.log(
+                        "STILL SUBOPTIMAL:",
+                        player.FirstName,
+                        player.LastName,
+                        player.Position,
+                        "#"+player.JerseyNum
+                    );
+
+                }
+
+            }
+
+        }
+
+    }
+
     return { stats, initialSuboptimal };
 }
 
 function printSummary(initialSuboptimal, stats) {
-    console.log("Renumbering complete.");
-    console.log("Generating summary...");
-
     console.log("\n====================================");
     console.log("Initial Analysis");
     console.log("====================================");
+
     console.log(`Players Outside Preferred Range : ${initialSuboptimal}`);
+    console.log("  (Players whose jersey was not in a preferred range before processing.)");
 
     console.log("\n====================================");
     console.log("ReNumbering Summary");
     console.log("====================================");
-    // console.log(`Players ReNumber Tries : ${stats.checked}`);
-    console.log(`Duplicate Resolutions  : ${stats.duplicateResolutions}`);
-    console.log(`Number Promotions      : ${stats.promotions}`);
-    console.log(`Suboptimal Corrections : ${stats.suboptimalCorrections}`);
-    console.log(`Total Jersey Changes   : ${stats.preferredRenumbers}`);
-    console.log(`Fallback ReNumbers     : ${stats.fallbackRenumbers}`);
-    console.log(`Unable to Improve      : ${stats.unchanged}`);
-}
 
-function validateTeamGroups(teamGroups, teamNames) {
-    let duplicateCount = 0;
-    let unchangedCount = 0;
+    console.log("Promotion Statistics");
+    console.log("------------------------------------");
+    console.log(`Promotion Eligible              : ${stats.promtionEligible}`);
+    console.log("  (Players who thought about moving to a better jersey.)");
+    console.log(`Successful Promotions           : ${stats.promotions}`);
+    console.log("  (Players who chose to move into a better jersey.)");
 
-    for (const [teamIndex, team] of teamGroups) {
-        const teamName = teamNames.get(teamIndex) ?? `Team ${teamIndex}`;
-        const offense = validateRoster(teamName, "Offense", team.offense);
-        const defense = validateRoster(teamName, "Defense", team.defense);
-        duplicateCount += offense.duplicates + defense.duplicates;
-        unchangedCount += offense.suboptimal + defense.suboptimal;
+    if (stats.promtionEligible > 0) {
+        console.log(
+            `Promotion Success Rate          : ${(
+                stats.promotions /
+                stats.promtionEligible *
+                100
+            ).toFixed(1)}%`
+        );
     }
 
-    return { duplicateCount, unchangedCount };
+    console.log("");
+
+    console.log("------------------------------------");
+    console.log(`Players Eligible                : ${stats.playersEvaluated}`);
+    console.log("  (Players who either had a duplicate jersey, tried to upgrade, or were outside their preferred range.)");
+
+    console.log("");
+
+    console.log("Changes Made");
+    console.log("------------------------------------");
+    console.log(`Duplicate Resolutions           : ${stats.duplicateResolutions}`);
+    console.log("  (Players renumbered because of a duplicate jersey.)");
+
+    console.log(`Suboptimal Corrections          : ${stats.suboptimalCorrections}`);
+    console.log("  (Players moved from a non-preferred number.)");
+
+    console.log("");
+
+    console.log("Assignment Types");
+    console.log("------------------------------------");
+    console.log(`Primary Preferred              : ${stats.primaryPreferredAssignments}`);
+    console.log("  (Assigned into the position's primary preferred range.)");
+
+    console.log(`Secondary Preferred            : ${stats.secondaryPreferredAssignments}`);
+    console.log("  (Assigned into a secondary preferred range.)");
+
+    console.log(`Fallback Assignments           : ${stats.fallbackAssignments}`);
+    console.log("  (Assigned into the fallback range because no preferred number was available.)");
+
+    console.log("                                --------");
+    console.log(`Total Jersey Changes           : ${stats.totalChanges}`);
+
+    if (
+        stats.totalChanges !==
+        stats.primaryPreferredAssignments +
+        stats.secondaryPreferredAssignments +
+        stats.fallbackAssignments
+    ) {
+        console.warn("\nWARNING: Assignment type counts do not balance.");
+    }
+}
+
+
+    function validateTeamGroups(teamGroups, teamNames) {
+        let duplicateCount = 0;
+        let unchangedCount = 0;
+
+        for (const [teamIndex, team] of teamGroups) {
+            const teamName = teamNames.get(teamIndex) ?? `Team ${teamIndex}`;
+            const offense = validateRoster(teamName, "Offense", team.offense);
+            const defense = validateRoster(teamName, "Defense", team.defense);
+            duplicateCount += offense.duplicates + defense.duplicates;
+            unchangedCount += offense.suboptimal + defense.suboptimal;
+        }
+
+        return { duplicateCount, unchangedCount };
 }
 
 function printValidationResults(results) {
@@ -572,50 +729,10 @@ function printValidationResults(results) {
     }
 }
 
-async function askRetry() {
-    while (true) {
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        });
 
-        console.log("\n====================================");
-        console.log("Finished");
-        console.log("====================================");
-        console.log("1. Run Again");
-        console.log("2. Exit\n");
+async function runTool() {
 
-        const choice = await new Promise(resolve => {
-            rl.question("Choice: ", answer => {
-                rl.close();
-                resolve(answer.trim());
-            });
-        });
-
-        if (choice === "1") {
-            return true;
-        }
-
-        if (choice === "2") {
-            console.log("\nGoodbye! Closing application.");
-
-            await sleep(2500); // Wait 3 seconds
-
-            process.exit(0);
-        }
-
-        console.log("\nInvalid selection.");
-    }
-}
-
-// ======================================================
-// Main Entry Point
-// ======================================================
-
-async function main() {
-    while (true) {
-        try {
-            console.log(`
+    console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║                                                            ║
 ║            CFB 27 JERSEY RENUMBER TOOL                     ║
@@ -626,140 +743,153 @@ async function main() {
 ╚════════════════════════════════════════════════════════════╝
 
 `);
-            await sleep(1600);
 
-            console.log("Finding dynasty saves...");
-            await sleep(800);
-            const savePath = resolveSavePath();
-            await sleep(800);
+    await sleep(1000);
+    const savePath = await promptForSave();
+    await sleep(800);
 
-            console.log(`\nSelected dynasty:\n${savePath}\n`);
-            await sleep(800);
+    console.log(`\nSelected dynasty:\n${savePath}\n`);
+    await sleep(800);
 
-            console.log("The tool will:");
-            await sleep(10);
-            console.log(" • Create a backup");
-            await sleep(10);
-            console.log(" • ReNumber player jerseys");
-            await sleep(100);
-            console.log(" • Save the modified dynasty\n");
+    console.log("The tool will:");
+    await sleep(10);
+    console.log(" • Create a backup");
+    await sleep(10);
+    console.log(" • ReNumber player jerseys");
+    await sleep(100);
+    console.log(" • Save the modified dynasty\n");
 
-            const proceed = await askYesNo("Would you like to continue?");
-            if (!proceed) {
-                console.log("\nOperation cancelled.");
-                console.log("No changes were made.");
-                return;
-            }
-            await sleep(750);
-
-            const renumberUserTeams = await askYesNo("ReNumber user-controlled teams as well?");
-            await sleep(750);
-
-            const backupPath = createBackup(savePath);
-            console.log("\n✓ Backup created");
-            console.log(`Location: ${backupPath}\n`);
-            await sleep(100);
-            console.log("To restore it later, rename the backup back to its original filename...\n");
-            await sleep(3500);
-
-            const franchise = await openSave(savePath);
-            console.log("Save opened successfully.");
-            await sleep(1000);
-
-            console.log("Reading Player table...");
-            const players = await readTable(franchise, "Player");
-            await sleep(800);
-            console.log(`Loaded ${players.records.length} players.`);
-            await sleep(800);
-
-            console.log("Reading Team table...");
-            const teams = await readTable(franchise, "Team");
-            await sleep(800);
-            console.log(`Loaded ${teams.records.length} teams.`);
-            await sleep(800);
-
-            const teamNames = getTeamNames(teams);
-            const userControlledTeams = getUserControlledTeams(teams);
-            const sortedTeamIndexes = getSortedTeamIndexes(teams);
-
-            console.log("\nUser-controlled teams:");
-            for (const teamIndex of userControlledTeams) {
-                console.log(`${teamIndex} - ${teamNames.get(teamIndex)}`);
-            }
-            console.log(`Found ${userControlledTeams.size} user-controlled team(s).\n`);
-            await sleep(800);
-
-            console.log("\nBuilding Rosters...\n");
-            await sleep(800);
-
-            for (const player of players.records) {
-                player.wasRenumberedThisRun = false;
-            }
-
-            const teamRosters = buildTeamRosters(players, userControlledTeams, renumberUserTeams, sortedTeamIndexes);
-            const teamGroups = buildTeamGroups(teamRosters);
-            sortAndResolveTeamGroups(teamGroups);
-
-            console.log("Rosters Built!\n");
-            await sleep(800);
-
-            console.log("\nReNumbering Players Now...\n");
-            await sleep(1000);
-            const { stats, initialSuboptimal } = await processTeamGroups(teamGroups, teamNames);
-
-            //
-            // Recalculate duplicate flags now that every
-            // jersey change has been completed.
-            //
-            sortAndResolveTeamGroups(teamGroups);
-
-            await sleep(1200);
-            printSummary(initialSuboptimal, stats);
-
-            await sleep(800);
-            const validationResults = validateTeamGroups(teamGroups, teamNames);
-            printValidationResults(validationResults);
-
-            // ╔════════════════════════════════════════════════════════════╗
-            // ║                                                            ║
-            // ║                                                            ║
-            // ║                        SAVING SECTION                      ║
-            // ║                                                            ║
-            // ║                                                            ║
-            // ╚════════════════════════════════════════════════════════════╝
-
-            await sleep(800);
-
-            console.log("\nSaving dynasty...");
-            await franchise.save();
-            console.log("Dynasty saved successfully!");
-            await sleep(800);
-            
-            // console.log("Saving is currently disabled.");
-            // console.log("No changes were written to disk.\n");
-
-            if (!(await askRetry())) {
-                return;
-            }
-
-            console.clear();
-        } catch (err) {
-            console.error("\nERROR:\n");
-            console.error(err);
-            const rl = readline.createInterface({
-                input: process.stdin,
-                output: process.stdout
-            });
-            await new Promise(resolve => {
-                rl.question("\nPress Enter to exit...", () => {
-                    rl.close();
-                    resolve();
-                });
-            });
-            return;
-        }
+    const shouldContinue = await confirm({
+        message: "Would you like to continue?"
+    });
+    if (!shouldContinue) {
+        console.log("\nOperation cancelled.");
+        console.log("No changes were made.");
+        return;
     }
+    await sleep(750);
+
+    const renumberUserTeams = await confirm({
+        message: "Would you like to ReNumber user-controlled teams as well?"
+    });
+    await sleep(750);
+
+    const backupPath = createBackup(savePath);
+    console.log("\n✓ Backup created");
+    console.log(`Location: ${backupPath}\n`);
+    await sleep(100);
+    console.log("Backups are saved to the same directory as the original save.\n");
+    await sleep(3500);
+
+    const franchise = await openSave(savePath);
+    console.log("Save opened successfully.");
+    await sleep(1000);
+
+    console.log("Reading Player table...");
+    const players = await readTable(franchise, PLAYER_TABLE_UID);
+    await sleep(800);
+    console.log(`Loaded ${players.records.length} players.`);
+    await sleep(800);
+
+    console.log("Reading Team table...");
+    const teams = await readTable(franchise, TEAM_TABLE_UID);
+    await sleep(800);
+    console.log(`Loaded ${teams.records.length} teams.`);
+    await sleep(800);
+
+    const teamNames = getTeamNames(teams);
+    const userControlledTeams = getUserControlledTeams(teams);
+    const sortedTeamIndexes = getSortedTeamIndexes(teams);
+
+    console.log("\nUser-controlled teams:");
+    for (const teamIndex of userControlledTeams) {
+        console.log(`${teamIndex} - ${teamNames.get(teamIndex)}`);
+    }
+    console.log(`Found ${userControlledTeams.size} user-controlled team(s).\n`);
+    await sleep(800);
+
+    console.log("\nBuilding Rosters...\n");
+    await sleep(800);
+
+    for (const player of players.records) {
+        player.wasRenumberedThisRun = false;
+    }
+
+    const teamRosters = buildTeamRosters(players, userControlledTeams, renumberUserTeams, sortedTeamIndexes);
+    const teamGroups = buildTeamGroups(teamRosters);
+    sortAndResolveTeamGroups(teamGroups);
+
+    console.log("Rosters Built!\n");
+    await sleep(800);
+
+    console.log("\nReNumbering Players Now...\n");
+    await sleep(1000);
+    const { stats, initialSuboptimal } = await processTeamGroups(teamGroups, teamNames);
+
+    //
+    // Recalculate duplicate flags now that every
+    // jersey change has been completed.
+    //
+    sortAndResolveTeamGroups(teamGroups);
+
+    await sleep(1200);
+    printSummary(initialSuboptimal, stats);
+
+
+    await sleep(800);
+    const validationResults = validateTeamGroups(teamGroups, teamNames);
+    printValidationResults(validationResults);
+
+    // ╔════════════════════════════════════════════════════════════╗
+    // ║                                                            ║
+    // ║                                                            ║
+    // ║                        SAVING SECTION                      ║
+    // ║                                                            ║
+    // ║                                                            ║
+    // ╚════════════════════════════════════════════════════════════╝
+
+    await sleep(800);
+
+    // console.log("\nSaving dynasty...");
+    // await franchise.save();
+    // console.log("Dynasty saved successfully!");
+    // await sleep(800);
+    
+    console.log("Saving is currently disabled.");
+    console.log("No changes were written to disk.\n");
+
 }
+
+// ======================================================
+// Main Entry Point
+// ======================================================
+
+async function main() {
+
+    console.clear();
+
+    try {
+
+        await runTool();
+
+        console.log(`
+=====================================
+Thanks for using Jersey ReNumber!
+=====================================
+`);
+
+await sleep(2000);
+
+    } catch (err) {
+
+        console.error("\nERROR:\n");
+        console.error(err);
+        process.exit(1);
+
+    }
+
+}
+
 
 
 // Run the program

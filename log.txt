@@ -1,0 +1,13 @@
+
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║            CFB 27 JERSEY RENUMBER TOOL                     ║
+║                                                            ║
+║                     Version 1.5                            ║
+║                        by Ace                              ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+
+? Paste the full path to your Dynasty save, or drag and drop it here and press E
+nter:[1A[87G
