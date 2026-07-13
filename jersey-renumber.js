@@ -1,8 +1,18 @@
+// =====================================
+// Jersey ReNumber - Main Script
+// Purpose: Read a CFB27 dynasty save, evaluate player jerseys,
+// and reassign numbers to follow team/position rules while
+// avoiding duplicates. This file orchestrates the process and
+// uses helper modules in the `lib/` folder.
+// =====================================
+
 // Table Unique IDs
 const PLAYER_TABLE_UID = 1612938518;
 const TEAM_TABLE_UID = 3359508968;
 
-// Import helper functions
+// -----------------------------
+// Module imports
+// -----------------------------
 const fs = require("fs");
 const { input, confirm } = require("@inquirer/prompts");
 const { openSave, readTable } = require("./lib/openSave");
@@ -21,13 +31,16 @@ const {
 const RULES = require("./lib/rules");
 const { validateRoster } = require("./lib/validator");
 const { sortRoster } = require("./lib/playerSorter");
+
+// Script configuration
 const VERSION = "1.5";
-const DEBUG = false
+const DEBUG = false;
 
-
+// Jersey range constants
 const MIN_JERSEY = 0;
 const MAX_JERSEY = 99;
 
+// Position grouping used for roster splitting
 const OFFENSE = new Set([
     "QB",
     "HB",
@@ -53,10 +66,15 @@ const DEFENSE = new Set([
     "SS"
 ]);
 
+// Small async helper used to add pauses for UX when printing.
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Prompt the user for the path to the dynasty save file.
+ * Performs basic validation (exists and is a file) before returning.
+ */
 async function promptForSave() {
 
     const filePath = await input({
@@ -64,7 +82,7 @@ async function promptForSave() {
 
         validate: (value) => {
 
-            const cleanPath = value.trim().replace(/^["']|["']$/g, "");
+            const cleanPath = value.trim().replace(/^['"]|['"]$/g, "");
 
             if (!cleanPath.length)
                 return "Please enter a path.";
@@ -81,9 +99,13 @@ async function promptForSave() {
         }
     });
 
-    return filePath.replace(/^["']|["']$/g, "");
+    return filePath.replace(/^['"]|['"]$/g, "");
 }
 
+/**
+ * Create a timestamped backup of the provided save file.
+ * Returns the backup path so the caller can report location.
+ */
 function createBackup(savePath) {
     const now = new Date();
     const timestamp =
@@ -99,80 +121,49 @@ function createBackup(savePath) {
     return backupPath;
 }
 
+// Return a Map teamIndex -> DisplayName for quick lookups.
 function getTeamNames(teamTable) {
-    const map = new Map();
-    for (const team of teamTable.records) {
-        map.set(team.TeamIndex, team.DisplayName);
-    }
-    return map;
+    const map = new Map(); for (const team of teamTable.records) map.set(team.TeamIndex, team.DisplayName); return map;
 }
 
+// Return a Set of team indexes controlled by the user.
 function getUserControlledTeams(teamTable) {
-    const set = new Set();
-    for (const team of teamTable.records) {
-        if (team.UserCharacter.includes("1")) {
-            set.add(team.TeamIndex);
-        }
-    }
-    return set;
+    const set = new Set(); for (const team of teamTable.records) if (team.UserCharacter.includes("1")) set.add(team.TeamIndex); return set;
 }
 
+// Return team indexes sorted by display name for predictable ordering.
 function getSortedTeamIndexes(teamTable) {
-    return [...teamTable.records]
-        .sort((a, b) => a.DisplayName.localeCompare(b.DisplayName))
-        .map(team => team.TeamIndex);
+    return [...teamTable.records].sort((a, b) => a.DisplayName.localeCompare(b.DisplayName)).map(team => team.TeamIndex);
 }
 
+// Build a Map of teamIndex -> array of player objects (full roster)
+// Filters players according to `shouldProcess` and whether the
+// user requested renumbering of user-controlled teams.
 function buildTeamRosters(players, userControlledTeams, renumberUserTeams, sortedTeamIndexes) {
-    const teamRosters = new Map();
-    for (const teamIndex of sortedTeamIndexes) {
-        teamRosters.set(teamIndex, []);
-    }
-
+    const teamRosters = new Map(); for (const teamIndex of sortedTeamIndexes) teamRosters.set(teamIndex, []);
     for (const player of players.records) {
-        if (!shouldProcess(player)) continue;
-        if (!renumberUserTeams && userControlledTeams.has(player.TeamIndex)) continue;
-
-        const roster = teamRosters.get(player.TeamIndex);
-        if (roster) {
-            roster.push(player);
-        }
+        if (!shouldProcess(player)) continue; if (!renumberUserTeams && userControlledTeams.has(player.TeamIndex)) continue; const roster = teamRosters.get(player.TeamIndex); if (roster) roster.push(player);
     }
-
     return teamRosters;
 }
 
+// Split each team's roster into `offense` and `defense` groups
+// for separate processing and sorting.
 function buildTeamGroups(teamRosters) {
-    const teamGroups = new Map();
-    
-
-    for (const [teamIndex, roster] of teamRosters) {
-        const offense = [];
-        const defense = [];
-
-        for (const player of roster) {
-            if (OFFENSE.has(player.Position)) {
-                offense.push(player);
-            } else if (DEFENSE.has(player.Position)) {
-                defense.push(player);
-            }
-        }
-
+    const teamGroups = new Map(); for (const [teamIndex, roster] of teamRosters) {
+        const offense = [], defense = [];
+        for (const player of roster) if (OFFENSE.has(player.Position)) offense.push(player); else if (DEFENSE.has(player.Position)) defense.push(player);
         teamGroups.set(teamIndex, { offense, defense });
     }
-
     return teamGroups;
 }
 
+// Helper that sorts each roster and resolves duplicate jerseys in-place.
 function sortAndResolveTeamGroups(teamGroups) {
-    for (const team of teamGroups.values()) {
-        sortRoster(team.offense);
-        sortRoster(team.defense);
-        resolveDuplicates(team.offense);
-        resolveDuplicates(team.defense);
-    }
+    for (const team of teamGroups.values()) { sortRoster(team.offense); sortRoster(team.defense); resolveDuplicates(team.offense); resolveDuplicates(team.defense); }
 }
 
+// Create a fresh statistics object used throughout processing.
 function createStats() {
     return {
         playersEvaluated: 0,
@@ -185,13 +176,16 @@ function createStats() {
         primaryPreferredAssignments: 0,
         secondaryPreferredAssignments: 0,
         fallbackAssignments: 0,
-        fallbackAssignments: 0,
         totalChanges: 0,
 
         stillSuboptimal: 0
     };
 }
 
+// Attempt to assign one of the `candidates` jersey numbers to `player`.
+// This function will mutate `player.JerseyNum` (and possibly other
+// players' numbers) when a valid assignment is made and returns an
+// object describing the result.
 function assignJersey(player, roster, candidates, teamName) {
     const oldNumber = player.JerseyNum;
     let selectedCandidateIndex = -1;
@@ -346,6 +340,8 @@ function assignJersey(player, roster, candidates, teamName) {
     };
 }
 
+// Main processing: iterate teams and sides, apply passes to resolve
+// duplicates, promote players, and optimize suboptimal numbers.
 async function processTeamGroups(teamGroups, teamNames) {
     const stats = createStats();
     let initialSuboptimal = 0;
@@ -370,15 +366,8 @@ async function processTeamGroups(teamGroups, teamNames) {
             resolveDuplicates(team[side]);
 
             // Reset per-run flags
-            for (const player of team[side]) {
-                player.wasRenumberedThisRun = false;
-            }
-
-            for (const player of team[side]) {
-
-                player.originalJerseyNum = player.JerseyNum;
-
-            }
+            for (const player of team[side]) player.wasRenumberedThisRun = false;
+            for (const player of team[side]) player.originalJerseyNum = player.JerseyNum;
 
             // ======================================================
             // PASS 1 - Promote Players Into Preferred Jersey Ranges
@@ -447,13 +436,9 @@ async function processTeamGroups(teamGroups, teamNames) {
                 }
 
                 if (wasRenumbered) {
-
-                    // if (DEBUG) {
-                        console.log(
-                            `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) : #${oldNumber} -> #${player.JerseyNum}`
-                        );
-                    // }
-
+                    console.log(
+                        `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) : #${oldNumber} -> #${player.JerseyNum}`
+                    );
                 }
             }
 
@@ -545,12 +530,9 @@ async function processTeamGroups(teamGroups, teamNames) {
 
                     }
                     
-                    // if (DEBUG) {
-                        console.log(
-                            `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) : #${oldNumber} -> #${player.JerseyNum}`
-                        );
-                    // }
-
+                    console.log(
+                        `${teamName} | ${player.FirstName} ${player.LastName} (${player.Position}) : #${oldNumber} -> #${player.JerseyNum}`
+                    );
                 }
 
             }
@@ -696,19 +678,21 @@ function printSummary(initialSuboptimal, stats) {
 }
 
 
-    function validateTeamGroups(teamGroups, teamNames) {
-        let duplicateCount = 0;
-        let unchangedCount = 0;
+// Run final validation passes against `validateRoster` helpers and
+// return a summary of duplicates and players still in suboptimal numbers.
+function validateTeamGroups(teamGroups, teamNames) {
+    let duplicateCount = 0;
+    let unchangedCount = 0;
 
-        for (const [teamIndex, team] of teamGroups) {
-            const teamName = teamNames.get(teamIndex) ?? `Team ${teamIndex}`;
-            const offense = validateRoster(teamName, "Offense", team.offense);
-            const defense = validateRoster(teamName, "Defense", team.defense);
-            duplicateCount += offense.duplicates + defense.duplicates;
-            unchangedCount += offense.suboptimal + defense.suboptimal;
-        }
+    for (const [teamIndex, team] of teamGroups) {
+        const teamName = teamNames.get(teamIndex) ?? `Team ${teamIndex}`;
+        const offense = validateRoster(teamName, "Offense", team.offense);
+        const defense = validateRoster(teamName, "Defense", team.defense);
+        duplicateCount += offense.duplicates + defense.duplicates;
+        unchangedCount += offense.suboptimal + defense.suboptimal;
+    }
 
-        return { duplicateCount, unchangedCount };
+    return { duplicateCount, unchangedCount };
 }
 
 function printValidationResults(results) {
@@ -730,6 +714,8 @@ function printValidationResults(results) {
 }
 
 
+// Orchestration: drive the full user interaction, loading, processing,
+// validation and saving of the dynasty save.
 async function runTool() {
 
     console.log(`
@@ -811,9 +797,7 @@ async function runTool() {
     console.log("\nBuilding Rosters...\n");
     await sleep(800);
 
-    for (const player of players.records) {
-        player.wasRenumberedThisRun = false;
-    }
+    for (const player of players.records) player.wasRenumberedThisRun = false;
 
     const teamRosters = buildTeamRosters(players, userControlledTeams, renumberUserTeams, sortedTeamIndexes);
     const teamGroups = buildTeamGroups(teamRosters);
@@ -854,16 +838,15 @@ async function runTool() {
     await franchise.save();
     console.log("Dynasty saved successfully!");
     await sleep(800);
-    
-    // console.log("Saving is currently disabled.");
-    // console.log("No changes were written to disk.\n");
-
 }
 
 // ======================================================
 // Main Entry Point
 // ======================================================
 
+
+// Standard Node entry point wrapper. Keeps run-time errors contained
+// and provides a friendly exit message.
 async function main() {
 
     console.clear();
@@ -878,7 +861,7 @@ Thanks for using Jersey ReNumber!
 =====================================
 `);
 
-await sleep(2000);
+        await sleep(2000);
 
     } catch (err) {
 
