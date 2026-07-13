@@ -168,20 +168,12 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 
 # Changelog
 
-## Version 1.5
+## Version 1.6
 
-- Fixed table reading to use uniqueID instead of tableName to prevent future issues. Please do not use the release version of the tool. Make sure you are on v1.5 or later.
-- You can now enter your savepath directly, or drag and drop it into the command window.
-- Fixed a typo that was causing DEs not to be processed by the tool.
-- Updated number rules to allow more intelligent number choices: 
-    -RBs now have a chance to pick teens numbers.
-    -0 is now generally lower priority for offensive players.
-    -QBs can now rarely wear 0.
-    -Added #33 [Jamal Adams rule] as a primary prefferred number for safeties, meaning if they get this number they won't promote off of it.
-    -DTs will be less likely to wear single digits, favoring 90s instead.
-    -Linebackers will be less likely to wear 30s, favoring 50s and 40s instead.
-- Updated naming convention on backups so you should no longer have to rename them, you should now be able to load them directly.
-- Changed from .exe to .bat
+- Fixed a bug that was causing NIL players to not be accounted for when switching to a preferred number. If an NIL player and a generated players have the same number, the generated player will be moved.
+- Updated logic to only displace other players from duplicate numbers, not on promotions or corrections.
+- Fixed logic to correctly show displaced players.
+- Updated naming convention on backups AGAIN. Sometimes if the filename is too long, they won't load. If that happens, manually rename the backup to something shorter and then it will work.
 - Cleaned up code.
 
 ---
