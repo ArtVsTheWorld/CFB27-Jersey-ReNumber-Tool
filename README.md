@@ -25,12 +25,11 @@ For every supported player, the tool:
 
 When multiple players compete for the same jersey number, priority is determined by:
 
-1. Position (Quarterbacks always choose first, Fullbacks always choose last.)
-2. Class Year
-3. Previous Redshirt Status
-4. Overall Rating
+1. Class Year
+2. Redshirt Status
+3. Overall Rating
 
-This helps simulate how jersey numbers are typically assigned within a real college football program.
+The only exceptions are QBs (always pick their numbers ahead of other positions regardless of age or OVR) and FBs (always pick last regardless of age or OVR). This produces realistic roster-wide numbering without manual intervention. This helps simulate how jersey numbers are typically assigned within a real college football program.
 
 ---
 
@@ -54,21 +53,22 @@ These options are entirely personal preference.
 
 Before making any changes, the tool automatically creates a backup of your Dynasty save.
 
-If anything goes wrong, simply rename the backup to the original save filename and replace the modified save with the backup copy.
+If anything goes wrong, simply reload the backup file. I recommend creating manual backups as well for an extra safety net.
 
 ---
 
 # Usage
 
-1. Make sure your Dynasty save is **not open** in-game.
-2. Extract folder
-3. Launch the Jersey ReNumber Tool.exe.
-4. Select your Dynasty save.
-5. Confirm the selected Dynasty.
-6. Confirm whether or not you would like to run the tool for user-controlled teams.
-7. Wait for processing to complete.
-8. Review the changes displayed by the tool.
-9. Launch the game.
+1. Ensure your Dynasty save is **not open** in EA Sports College Football 27.
+2. Download and extract the latest release.
+3. Double-click **CFB27_JerseyRenumberTool.bat**.
+4. Select your Dynasty save when prompted.
+5. Verify the selected Dynasty is correct.
+6. Choose whether to include user-controlled teams in the renumbering process.
+7. Wait for the tool to finish processing your roster.
+8. Review the summary and jersey changes displayed in the console.
+9. Press **Enter** to close the tool.
+10. Load your updated Dynasty.
 
 ---
 
@@ -107,57 +107,90 @@ The current version only evaluates the following positions:
 - Offense: QB, HB, WR, TE, FB
 - Defense: DE, DT, MIKE, OLB, CB, S
 
-OLs, Kickers, and Punters are intentionally excluded in Version 1.0.
+OL, Kickers, and Punters are intentionally excluded.
 
 ---
 
 ## Jersey Assignment Logic
 
-Each position has one or more **preferred jersey ranges**, listed in order of priority.
-
-For example:
-
-```js
-preferred: [[0, 19], [80, 89]]
-```
-
-The tool will:
-
-1. Try to assign a jersey between **0–19** first.
-2. If none are available, try **80–89**.
-
-If no preferred numbers are available, the tool assigns a number from that position's fallback range.
-
-Some positions also include a `promoteChance` value. This gives players wearing a secondary preferred number a chance to "move up" into the primary preferred range each time the tool is run, provided a preferred number is available.
+Each position has one or more **preferred jersey groups**, listed in order of priority. Within each group, numbers are also prioritized.
 
 For example:
 
 ```js
 WR: {
-    preferred: [[0, 19], [80, 89]],
-    fallback: [[36, 44]],
-    promoteChance: 0.75
+    preferred: [
+        [1,2,3,4,5,6,7,8,0,9,11,10,12,13,14,15,16,17,18,19],
+        [88,80,81,82,83,84,85,86,87,89]
+    ],
+    fallback: [
+        [20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39]
+    ],
+    promoteChance: 0.65
 }
 ```
 
-A WR wearing an 80-series number has a **75% chance** each time the tool is run to attempt to move into an available 0–19 jersey. If no primary number is available—or the promotion check fails—the player keeps their current jersey number.
+The tool attempts to assign jerseys in the following order:
+
+1. Preferred Group 1 (in the order listed)
+2. Preferred Group 2 (in the order listed)
+3. Fallback Group
+
+Because each group is ordered, some jersey numbers are intentionally favored over others to better reflect modern college football numbering trends.
+
+### Promotions
+
+Some positions include a `promoteChance` value.
+
+If a player is already wearing a jersey from a lower-priority preferred group (for example, an 80-series WR), they have a chance each time the tool is run to move into an available jersey from a higher-priority preferred group.
+
+For example:
+
+```js
+promoteChance: 0.65
+```
+
+A wide receiver wearing an 80-series number has a **65% chance** each time the tool is run to attempt to move into an available single-digit or teen number. If no higher-priority jersey is available—or the promotion check fails—the player keeps their current number.
+
+Promotions never occur into fallback numbers and never create duplicate jerseys.
 
 ---
 
 # Known Limitations
 
-- Offensive linemen are not currently processed.
-- Specialists (K/P) are not currently processed, as such you may run into situations where there are 3 of one number on a team. (One on offense, one on defense, one K/P)
+- Offensive linemen (LT, LG, C, RG, RT) are intentionally excluded. I feel the game does an ok job here.
+- Specialists (K/P) are intentionally excluded. As a result, a team may legitimately have three players wearing the same number (offense, defense, and specialist).
 - Team-specific numbering traditions are not currently considered.
-- Retired or honored jersey numbers are not currently tracked.
+- Retired or honored jersey numbers are not tracked.
+- Jersey assignments are based solely on roster composition and position; depth chart order is not considered.
 
 ---
 
 # Changelog
 
-## Version 1.0
+## Version 1.5
 
-- Initial public release.
+- Fixed table reading to use uniqueID instead of tableName to prevent future issues. Please do not use the release version of the tool. Make sure you are on v1.5 or later.
+- You can now enter your savepath directly, or drag and drop it into the command window.
+- Fixed a typo that was causing DEs not to be processed by the tool.
+- Updated number rules to allow more intelligent number choices: 
+    -RBs now have a chance to pick teens numbers.
+    -0 is now generally lower priority for offensive players.
+    -QBs can now rarely wear 0.
+    -Added #33 [Jamal Adams rule] as a primary prefferred number for safeties, meaning if they get this number they won't promote off of it.
+    -DTs will be less likely to wear single digits, favoring 90s instead.
+    -Linebackers will be less likely to wear 30s, favoring 50s and 40s instead.
+- Updated naming convention on backups so you should no longer have to rename them, you should now be able to load them directly.
+- Changed from .exe to .bat
+- Cleaned up code.
+
+---
+
+# Changelog
+
+- Team specific jersey rules.
+- Retired number support
+- Configurable number ranges/promotion chances.
 
 ---
 
@@ -166,6 +199,8 @@ A WR wearing an 80-series number has a **75% chance** each time the tool is run 
 Special thanks to **chunky** for open-sourcing his Recruit Commitment Tool, which served as a great learning resource while I built my first modding tool.
 
 Thanks also to **KivJoy** for answering countless questions throughout development and for sharing his Coaching Carousel Tool, which was another valuable reference.
+
+And last but not least thanks to ChatGPT and VS Code agent for being my best buds! :)
 
 ---
 
