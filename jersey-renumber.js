@@ -11,26 +11,18 @@ const PLAYER_TABLE_UID = 1612938518;
 const TEAM_TABLE_UID = 3359508968;
 
 // -----------------------------
-// Module imports
+// Module imports (ESM)
 // -----------------------------
-const fs = require("fs");
-const { input, confirm } = require("@inquirer/prompts");
-const { openSave, readTable } = require("./lib/openSave");
-const { shouldProcess } = require("./lib/playerFilter");
-const {
-    isLegalNumber,
-    isPromotionEligible,
-    needsRenumber,
-    getRenumberReason
-} = require("./lib/numberRules");
-const { generateCandidates } = require("./lib/candidateGenerator");
-const {
-    resolveDuplicates,
-    isNumberAvailable
-} = require("./lib/duplicateResolver");
-const RULES = require("./lib/rules");
-const { validateRoster } = require("./lib/validator");
-const { sortRoster } = require("./lib/playerSorter");
+import fs from "fs";
+import { input, confirm } from "@inquirer/prompts";
+import { openSave, readTable } from "./lib/openSave.js";
+import { shouldProcess } from "./lib/playerFilter.js";
+import { isLegalNumber, isPromotionEligible, needsRenumber, getRenumberReason } from "./lib/numberRules.js";
+import { generateCandidates } from "./lib/candidateGenerator.js";
+import { resolveDuplicates, isNumberAvailable } from "./lib/duplicateResolver.js";
+import RULES from "./lib/rules.js";
+import { validateRoster } from "./lib/validator.js";
+import { sortRoster } from "./lib/playerSorter.js";
 
 // Script configuration
 const VERSION = "1.5";

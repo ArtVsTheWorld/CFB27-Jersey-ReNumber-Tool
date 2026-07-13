@@ -4,39 +4,20 @@
   "description": "Automatically assigns realistic jersey numbers to players in EA Sports College Football 27 Dynasty Mode while following modern college football numbering conventions.",
   "author": "ArtVsTheWorld",
   "license": "MIT",
-
-  "type": "commonjs",
+  "type": "module",
   "main": "jersey-renumber.js",
   "bin": "jersey-renumber.js",
-
-   "scripts": {
-   "start": "node jersey-renumber.js",
-   "build": "pkg . --targets node18-win-x64 --compress GZip --output dist/CFB27_JerseyRenumberTool.exe",
-   "clean": "rmdir /s /q dist",
-   "test": "echo \"No tests specified\""
+  "scripts": {
+    "start": "node jersey-renumber.js"
   },
-
-  "pkg": {
-    "targets": [
-      "node18-win-x64"
-    ],
-    "outputPath": "dist",
-    "compress": "GZip",
-    "assets": [
-      "engine-data/**/*"
-    ]
-  },
-
   "directories": {
     "lib": "lib"
   },
-
   "dependencies": {
     "@inquirer/prompts": "^8.5.2",
     "madden-franchise": "^4.3.1",
     "prompt-sync": "^4.2.0"
   },
-
   "keywords": [
     "college-football",
     "cfb27",
@@ -46,15 +27,12 @@
     "modding",
     "roster"
   ],
-
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ArtVsTheWorld/CFB27-Jersey-ReNumber-Tool.git"
   },
-
   "bugs": {
     "url": "https://github.com/ArtVsTheWorld/CFB27-Jersey-ReNumber-Tool/issues"
   },
-
   "homepage": "https://github.com/ArtVsTheWorld/CFB27-Jersey-ReNumber-Tool#readme"
 }
