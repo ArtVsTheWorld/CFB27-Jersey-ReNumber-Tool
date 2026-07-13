@@ -191,6 +191,7 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 - Team specific jersey rules.
 - Retired number support.
 - Configurable number ranges/promotion chances.
+- Archetye based rules/number preferrence.
 
 ---
 
