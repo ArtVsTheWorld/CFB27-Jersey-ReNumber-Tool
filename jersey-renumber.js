@@ -850,13 +850,13 @@ async function runTool() {
 
     await sleep(800);
 
-    // console.log("\nSaving dynasty...");
-    // await franchise.save();
-    // console.log("Dynasty saved successfully!");
-    // await sleep(800);
+    console.log("\nSaving dynasty...");
+    await franchise.save();
+    console.log("Dynasty saved successfully!");
+    await sleep(800);
     
-    console.log("Saving is currently disabled.");
-    console.log("No changes were written to disk.\n");
+    // console.log("Saving is currently disabled.");
+    // console.log("No changes were written to disk.\n");
 
 }
 
