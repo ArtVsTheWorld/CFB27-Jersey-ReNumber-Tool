@@ -163,7 +163,7 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 
 - Offensive linemen (LT, LG, C, RG, RT) are intentionally excluded. I feel the game does an ok job here.
 - Specialists (K/P) are intentionally excluded. As a result, a team may legitimately have three players wearing the same number (offense, defense, and specialist).
-- LSU's #7 tradition is supported. The highest-rated eligible non-NIL player receives #7 unless an NIL player already owns it.
+- QBs on the same team will sometime share numbers. This appears to be base game logic to prevent QBs from taking 20s or higher numbers.
 - Retired or honored jersey numbers are not tracked.
 - Jersey assignments are based solely on roster composition and position; depth chart order is not considered.
 
