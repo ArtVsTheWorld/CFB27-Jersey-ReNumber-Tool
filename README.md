@@ -16,8 +16,9 @@ For every supported player, the tool:
 2. Assigns a preferred jersey number if a change is needed. Some positions also have a chance to move from a secondary preferred range into a more desirable primary range when one becomes available (for example, a CB wearing #14 may attempt to move to an available single-digit number).
 3. When possible, prefers similar-looking jersey numbers (for example, a WR wearing #84 will first try #4, then #8, then #14 or #18 before selecting another preferred number).
 4. Falls back to an emergency number if no preferred numbers are available.
-5. Automatically resolves duplicate jersey numbers on the same side of the ball.
-6. Saves the updated Dynasty file.
+5. Automatically resolves duplicate jersey numbers on the same side of the ball, while preserving base-game QB-QB shared numbers.
+6. Applies supported team traditions, beginning with LSU awarding #7 to its highest-rated eligible player.
+7. Either previews the proposed changes or backs up and saves the updated Dynasty file.
 
 ---
 
@@ -63,12 +64,13 @@ If anything goes wrong, simply reload the backup file. I recommend creating manu
 2. Download and extract the latest release.
 3. Double-click **CFB27_JerseyRenumberTool.bat**.
 4. Select your Dynasty save when prompted.
-5. Verify the selected Dynasty is correct.
-6. Choose whether to include user-controlled teams in the renumbering process.
-7. Wait for the tool to finish processing your roster.
-8. Review the summary and jersey changes displayed in the console.
-9. Press **Enter** to close the tool.
-10. Load your updated Dynasty.
+5. Choose Preview Only or Apply Changes.
+6. Verify the selected Dynasty is correct.
+7. Choose whether to include user-controlled teams in the renumbering process.
+8. Choose whether to enable team-specific jersey rules.
+9. Wait for the tool to finish processing your roster.
+10. Review the color-coded summary and jersey changes displayed in the console.
+11. If applying changes, load your updated Dynasty.
 
 ---
 
@@ -79,6 +81,7 @@ If anything goes wrong, simply reload the backup file. I recommend creating manu
 - No player ratings, attributes, tendencies, equipment, recruiting data, or other Dynasty information are changed.
 - Existing backups are never overwritten.
 - Running the tool multiple times is safe.
+- Preview Only performs the full simulation without creating a backup or saving the Dynasty file.
 
 ---
 
@@ -160,13 +163,22 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 
 - Offensive linemen (LT, LG, C, RG, RT) are intentionally excluded. I feel the game does an ok job here.
 - Specialists (K/P) are intentionally excluded. As a result, a team may legitimately have three players wearing the same number (offense, defense, and specialist).
-- Team-specific numbering traditions are not currently considered.
+- LSU's #7 tradition is supported. The highest-rated eligible non-NIL player receives #7 unless an NIL player already owns it.
 - Retired or honored jersey numbers are not tracked.
 - Jersey assignments are based solely on roster composition and position; depth chart order is not considered.
 
 ---
 
 # Changelog
+
+## Version 2.0
+
+- Added Preview Only and Apply Changes run modes.
+- Added optional team-specific jersey rules and LSU's #7 tradition.
+- Added color-coded change, duplicate, displacement, and status logging.
+- Added player class year to change logging.
+- Reworked the final summary around clearer roster and change metrics.
+- Preserved base-game QB-QB shared jersey numbers.
 
 ## Version 1.6
 
