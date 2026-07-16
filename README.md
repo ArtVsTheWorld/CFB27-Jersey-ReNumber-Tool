@@ -174,7 +174,7 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 ## Version 2.0
 
 - Added Preview Only and Apply Changes run modes.
-- Added optional team-specific jersey rules and LSU's #7 tradition.
+- Added optional team-specific jersey rules, starting with LSU's #7 tradition. (Awarded to the single highest overall player of an eligible position on the team. Will move other players wearing #7 to different numbers.)
 - Added color-coded change, duplicate, displacement, and status logging.
 - Added player class year to change logging.
 - Reworked the final summary around clearer roster and change metrics.
