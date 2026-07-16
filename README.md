@@ -179,6 +179,7 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 - Added player class year to change logging.
 - Reworked the final summary around clearer roster and change metrics.
 - Preserved base-game QB-QB shared jersey numbers.
+- Increased promotion chances for most positions.
 
 ---
 
