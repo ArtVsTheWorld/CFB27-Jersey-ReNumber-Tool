@@ -36,17 +36,7 @@ The only exceptions are QBs (always pick their numbers ahead of other positions 
 
 # When Should I Run the Tool?
 
-The tool can be run at two different points during the offseason.
-
-## Option 1 — National Signing Day
-
-Only players currently on your roster are renumbered, incoming players are not. Running the tool in this week will result in more preferrable numbers for returning players, but less number continuity. Incoming recruits and transfers added after National Signing Day will fill in to unused jersey numbers using the game's default assignment logic unless you run the tool again in preseason week.
-
-## Option 2 — Preseason Week
-
-The entire roster is renumbered at the same time, including returning players and incoming players. Waiting until this week to run the tool will result in more preferrable numbers for incoming players, and more number continuity. This option is also better for applying team traditions properly.
-
-These options are entirely personal preference.
+Please run this tool in preseason week for best results!
 
 ---
 
