@@ -36,7 +36,7 @@ The only exceptions are QBs (always pick their numbers ahead of other positions 
 
 # When Should I Run the Tool?
 
-Please run this tool in preseason week for best results!
+Please run this tool in preseason week for the best results!
 
 ---
 
