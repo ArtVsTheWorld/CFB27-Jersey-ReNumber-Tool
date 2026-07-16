@@ -1,6 +1,6 @@
 # CFB 27 Jersey ReNumber Tool
 
-Automatically assigns realistic jersey numbers to players in **EA Sports College Football 27 Dynasty Mode** while following modern college football numbering conventions.
+Automatically assigns realistic jersey numbers to players in College Football 27 Dynasty Mode while following modern college football numbering conventions.
 
 The tool analyzes every eligible player on your roster and intelligently assigns jersey numbers that better reflect what you see on Saturdays.
 
@@ -44,7 +44,7 @@ Only players currently on your roster are renumbered, incoming players are not. 
 
 ## Option 2 — Preseason Week
 
-The entire roster is renumbered at the same time, including returning players and incoming players. Waiting until this week to run the tool will result in more preferrable numbers for incoming players, and more number continuity. 
+The entire roster is renumbered at the same time, including returning players and incoming players. Waiting until this week to run the tool will result in more preferrable numbers for incoming players, and more number continuity. This option is also better for applying team traditions properly.
 
 These options are entirely personal preference.
 
@@ -180,22 +180,13 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 - Reworked the final summary around clearer roster and change metrics.
 - Preserved base-game QB-QB shared jersey numbers.
 
-## Version 1.6
-
-- Fixed a bug that was causing NIL players to not be accounted for when switching to a preferred number. If an NIL player and a generated player have the same number, the generated player will be moved.
-- Updated logic to only displace other players from duplicate numbers, not on promotions or corrections.
-- Fixed logging to correctly show displaced players, and to show player OVR.
-- Updated naming convention on backups AGAIN. Sometimes if the filename is too long, they won't load. If that happens, manually rename the backup to something shorter and then it will work.
-- Cleaned up code.
-
 ---
 
 # Planned Additions
 
-- Team specific jersey rules.
 - Retired number support.
 - Configurable number ranges/promotion chances.
-- Positional Archetype based rules/number preferences.
+- More team specific jersey rules.
 
 ---
 
@@ -205,7 +196,7 @@ Special thanks to **chunky** for open-sourcing his Recruit Commitment Tool, whic
 
 Thanks also to **KivJoy** for answering countless questions throughout development and for sharing his Coaching Carousel Tool, which was another valuable reference.
 
-And last but not least thanks to ChatGPT and VS Code agent for being my best buds! :)
+And last but not least thanks to ChatGPT Codex and VS Code agent for being my best buds! :)
 
 ---
 
