@@ -24,6 +24,7 @@ import RULES from "./lib/rules.js";
 import { validateRoster } from "./lib/validator.js";
 import { sortRoster } from "./lib/playerSorter.js";
 import { applyTeamSpecificRules } from "./lib/teamRules.js";
+import { applyProtectedNumbersToTeamGroups, getBlockedNumberReason, isBlockedNumberForPlayer } from "./lib/protectedNumbers.js";
 import { colors, logChange, logDisplacement, logDuplicate, logError, logInfo } from "./lib/logger.js";
 
 // Script configuration
@@ -185,6 +186,7 @@ function createStats() {
         totalChanges: 0,
         displacedPlayers: 0,
         stillSuboptimal: 0,
+        protectedNumberCorrections: 0,
         teamRulesApplied: 0,
         teamRulesSkipped: 0,
         teamRuleDisplacements: 0
@@ -205,6 +207,8 @@ function assignJersey(player, roster, candidates, teamName) {
 
     for (let i = 0; i < candidates.length; i++) {
         const number = candidates[i];
+
+        if (isBlockedNumberForPlayer(player, number)) continue;
 
         if (!isLegalNumber({ ...player, JerseyNum: number })) {
             console.log("ILLEGAL ASSIGNMENT", player.Position, player.JerseyNum, "->", number);
@@ -233,6 +237,7 @@ function assignJersey(player, roster, candidates, teamName) {
 
                 for (const blockerNumber of blockerCandidates) {
                     if (blockerNumber === blocker.JerseyNum || blockerNumber === oldNumber) continue;
+                    if (isBlockedNumberForPlayer(blocker, blockerNumber)) continue;
 
                     const blockerCanMove = isNumberAvailable(blocker, blockerNumber, roster);
                     if (!blockerCanMove) continue;
@@ -263,6 +268,7 @@ function assignJersey(player, roster, candidates, teamName) {
 
     if (player.mustRenumberDuplicate) {
         for (let n = MIN_JERSEY; n <= MAX_JERSEY; n++) {
+            if (isBlockedNumberForPlayer(player, n)) continue;
             if (isNumberAvailable(player, n, roster)) {
                 player.JerseyNum = n;
                 player.wasRenumberedThisRun = true;
@@ -289,6 +295,8 @@ function assignJersey(player, roster, candidates, teamName) {
 async function processTeamGroups(teamGroups, teamNames, enableTeamRules) {
     const stats = createStats();
     let initialSuboptimal = 0;
+
+    applyProtectedNumbersToTeamGroups(teamGroups, teamNames);
 
     for (const team of teamGroups.values()) {
         for (const side of ["offense", "defense"]) {
@@ -481,6 +489,10 @@ async function processTeamGroups(teamGroups, teamNames, enableTeamRules) {
                         stats.suboptimalCorrections++;
                     }
 
+                    if (reason.protectedNumber && !isBlockedNumberForPlayer(player, player.JerseyNum)) {
+                        stats.protectedNumberCorrections++;
+                    }
+
                     if (reason.promotion) {
                         stats.promotions++;
                     }
@@ -518,7 +530,10 @@ async function processTeamGroups(teamGroups, teamNames, enableTeamRules) {
                         logDisplacement(teamName, displacedPlayer.player, displacedPlayer.oldNumber, displacedPlayer.newNumber, "jersey optimization");
                     }
 
-                    logChange(teamName, player, oldNumber, reason.promotion ? "promotion" : "position range corrected");
+                    const changeReason = reason.protectedNumber
+                        ? getBlockedNumberReason(player, oldNumber)
+                        : (reason.promotion ? "promotion" : "position range corrected");
+                    logChange(teamName, player, oldNumber, changeReason);
                     
                     
                 }
@@ -614,6 +629,7 @@ function printSummary(initialSuboptimal, stats) {
     row("Duplicate conflicts resolved", stats.duplicateResolutions);
     row("Players promoted", stats.promotions);
     row("Invalid position numbers fixed", stats.suboptimalCorrections);
+    row("Protected numbers fixed", stats.protectedNumberCorrections);
     row("Players displaced", totalDisplacements);
     row("Fallback numbers assigned", stats.fallbackAssignments);
 
@@ -790,6 +806,7 @@ async function runTool() {
         player.wasRenumberedThisRun = false;
         player.teamRuleLocked = false;
         player.teamRuleNumber = undefined;
+        player.protectedNumberRules = new Map();
         player.originalJerseyNum = player.JerseyNum;
     }
 

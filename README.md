@@ -17,8 +17,9 @@ For every supported player, the tool:
 3. When possible, prefers similar-looking jersey numbers (for example, a WR wearing #84 will first try #4, then #8, then #14 or #18 before selecting another preferred number).
 4. Falls back to an emergency number if no preferred numbers are available.
 5. Automatically resolves duplicate jersey numbers on the same side of the ball, while preserving base-game QB-QB shared numbers.
-6. Applies supported team traditions, beginning with LSU awarding #7 to its highest-rated eligible player.
-7. Either previews the proposed changes or backs up and saves the updated Dynasty file.
+6. Avoids assigning configured unavailable, legacy-permission, and temporarily withheld school numbers.
+7. Applies supported team traditions, beginning with LSU awarding #7 to its highest-rated eligible player.
+8. Either previews the proposed changes or backs up and saves the updated Dynasty file.
 
 ---
 
@@ -149,12 +150,32 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 
 ---
 
+# Retired and Protected Numbers
+
+The tool tracks school-specific protected numbers with statuses instead of a simple retired flag:
+
+- **Unavailable** numbers are blocked from ordinary assignment.
+- **Legacy/permission required** numbers are blocked from ordinary assignment.
+- **Temporarily withheld** numbers are blocked from ordinary assignment.
+- **Annual honor**, **honored but reusable**, and **position tradition** numbers are documented but not hard-blocked by the retired-number layer.
+
+Examples:
+
+- LSU #20 is blocked for Billy Cannon.
+- LSU #21 and #37 are honored but remain reusable.
+- Ole Miss #38, Texas A&M #12, and Virginia Tech #25 are treated as annual-honor numbers rather than retired-number blocks.
+- Clemson #4 and #28, plus Syracuse #44, are treated as legacy/permission-required numbers.
+
+The protected-number list is intentionally high-confidence rather than a blind copy of every school retired-jersey page.
+
+---
+
 # Known Limitations
 
 - Offensive linemen (LT, LG, C, RG, RT) are intentionally excluded. I feel the game does an ok job here.
 - Specialists (K/P) are intentionally excluded. As a result, a team may legitimately have three players wearing the same number (offense, defense, and specialist).
 - QBs on the same team will sometime share numbers. This appears to be base game logic to prevent QBs from taking 20s or higher numbers.
-- Retired or honored jersey numbers are not tracked.
+- Protected-number handling is a curated working list, not an exhaustive database.
 - Jersey assignments are based solely on roster composition and position; depth chart order is not considered.
 
 ---
@@ -170,12 +191,13 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 - Reworked the final summary around clearer roster and change metrics.
 - Preserved base-game QB-QB shared jersey numbers.
 - Increased promotion chances for most positions.
+- Added statused retired and protected number handling.
 
 ---
 
 # Planned Additions
 
-- Retired number support.
+- Configurable protected-number lists and status overrides.
 - Configurable number ranges/promotion chances.
 - More team specific jersey rules.
 
