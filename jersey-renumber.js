@@ -694,14 +694,14 @@ async function runTool() {
     const runMode = await select({
         message: "Choose a run mode:",
         choices: [
-            { name: "Preview only (dry run - no backup and no save)", value: "preview" },
+            { name: "Preview first (review changes, then choose whether to backup and save)", value: "preview" },
             { name: "Apply changes (backup and save)", value: "apply" }
         ]
     });
     const isPreview = runMode === "preview";
 
     console.log(`\nSelected dynasty:\n${savePath}\n`);
-    logInfo(`Run mode: ${isPreview ? "PREVIEW ONLY" : "APPLY CHANGES"}`);
+    logInfo(`Run mode: ${isPreview ? "PREVIEW FIRST" : "APPLY CHANGES"}`);
     await sleep(800);
 
     // Backups are created only when the user intends to save changes.
@@ -718,7 +718,7 @@ async function runTool() {
         console.log("The tool will:");
         console.log(" - Simulate all jersey changes in memory");
         console.log(" - Show the full change log and summary");
-        console.log(" - Leave the dynasty file untouched\n");
+        console.log(" - Ask whether to backup and save these changes after review\n");
     }
 
     const shouldContinue = await confirm({
@@ -752,7 +752,7 @@ async function runTool() {
     console.log("Backups are saved to the same directory as the original save.\n");
     await sleep(3500);
     } else {
-        logInfo("\nPREVIEW: No backup will be created and the dynasty will not be saved.\n");
+        logInfo("\nPREVIEW: No backup will be created unless you choose to save after reviewing the results.\n");
     }
 
     const franchise = await openSave(savePath);
@@ -827,9 +827,24 @@ async function runTool() {
     // ╚════════════════════════════════════════════════════════════╝
 
     await sleep(800);
-    // Preview exits after reporting; apply mode commits the in-memory changes.
+    // Preview mode lets the user review the in-memory changes before deciding
+    // whether those exact changes should be backed up and saved.
     if (isPreview) {
-        console.log(colors.cyan("\nPREVIEW COMPLETE: No backup was created and no changes were saved."));
+        const applyPreview = await confirm({
+            message: "Apply these previewed changes now? A backup will be created before saving.",
+            default: false
+        });
+
+        if (applyPreview) {
+            const backupPath = createBackup(savePath);
+            console.log("\nâœ“ Backup created");
+            console.log(`Location: ${backupPath}\n`);
+            console.log("\nSaving dynasty...");
+            await franchise.save();
+            console.log(colors.green("Preview changes saved successfully!"));
+        } else {
+            console.log(colors.cyan("\nPREVIEW COMPLETE: No backup was created and no changes were saved."));
+        }
     } else {
         console.log("\nSaving dynasty...");
         await franchise.save();

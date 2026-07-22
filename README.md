@@ -52,7 +52,7 @@ These options are entirely personal preference.
 
 # Backups
 
-Before making any changes, the tool automatically creates a backup of your Dynasty save.
+Before saving any changes, the tool automatically creates a backup of your Dynasty save.
 
 If anything goes wrong, simply reload the backup file. I recommend creating manual backups as well for an extra safety net.
 
@@ -64,13 +64,14 @@ If anything goes wrong, simply reload the backup file. I recommend creating manu
 2. Download and extract the latest release.
 3. Double-click **CFB27_JerseyRenumberTool.bat**.
 4. Select your Dynasty save when prompted.
-5. Choose Preview Only or Apply Changes.
+5. Choose Preview First or Apply Changes.
 6. Verify the selected Dynasty is correct.
 7. Choose whether to include user-controlled teams in the renumbering process.
 8. Choose whether to enable team-specific jersey rules.
 9. Wait for the tool to finish processing your roster.
 10. Review the color-coded summary and jersey changes displayed in the console.
-11. If applying changes, load your updated Dynasty.
+11. If using Preview First, choose whether to save the reviewed changes.
+12. If applying changes, load your updated Dynasty.
 
 ---
 
@@ -81,7 +82,7 @@ If anything goes wrong, simply reload the backup file. I recommend creating manu
 - No player ratings, attributes, tendencies, equipment, recruiting data, or other Dynasty information are changed.
 - Existing backups are never overwritten.
 - Running the tool multiple times is safe.
-- Preview Only performs the full simulation without creating a backup or saving the Dynasty file.
+- Preview First performs the full simulation without creating a backup up front. After reviewing the results, you can either exit without saving or create a backup and save those exact previewed changes.
 
 ---
 
@@ -173,7 +174,7 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 
 ## Version 2.0
 
-- Added Preview Only and Apply Changes run modes.
+- Added Preview First and Apply Changes run modes.
 - Added optional team-specific jersey rules, starting with LSU's #7 tradition. (Awarded to the single highest overall player of an eligible position on the team. Will move other players wearing #7 to different numbers.)
 - Added color-coded change, duplicate, displacement, and status logging.
 - Added player class year to change logging.
