@@ -40,12 +40,7 @@ const OFFENSE = new Set([
     "HB",
     "FB",
     "WR",
-    "TE",
-    "LT",
-    "LG",
-    "C",
-    "RG",
-    "RT"
+    "TE"
 ]);
 
 const DEFENSE = new Set([
@@ -147,15 +142,15 @@ function buildTeamRosters(players, userControlledTeams, renumberUserTeams, sorte
     return teamRosters;
 }
 
-// Split each team's roster into offense and defense groups
-// for separate processing and sorting.
+// Split each team's roster into offense and defense groups for generic
+// renumbering while preserving the full roster for team traditions.
 function buildTeamGroups(teamRosters) {
     const teamGroups = new Map();
     for (const [teamIndex, roster] of teamRosters) {
         const offense = [];
         const defense = [];
         for (const player of roster) if (OFFENSE.has(player.Position)) offense.push(player); else if (DEFENSE.has(player.Position)) defense.push(player);
-        teamGroups.set(teamIndex, { offense, defense });
+        teamGroups.set(teamIndex, { offense, defense, all: roster });
     }
     return teamGroups;
 }
@@ -195,6 +190,10 @@ function createStats() {
 // This function will mutate player.JerseyNum (and possibly other
 // players' numbers) when a valid assignment is made and returns an
 // object describing the result.
+function isTeamRuleReservedForPlayer(player, number) {
+    return player.teamRuleReservedNumbers?.has(number) && !(player.teamRuleLocked && player.teamRuleNumber === number);
+}
+
 function assignJersey(player, roster, candidates, teamName) {
     const oldNumber = player.JerseyNum;
     let selectedCandidateIndex = -1;
@@ -205,6 +204,8 @@ function assignJersey(player, roster, candidates, teamName) {
 
     for (let i = 0; i < candidates.length; i++) {
         const number = candidates[i];
+
+        if (isTeamRuleReservedForPlayer(player, number)) continue;
 
         if (!isLegalNumber({ ...player, JerseyNum: number })) {
             console.log("ILLEGAL ASSIGNMENT", player.Position, player.JerseyNum, "->", number);
@@ -233,6 +234,7 @@ function assignJersey(player, roster, candidates, teamName) {
 
                 for (const blockerNumber of blockerCandidates) {
                     if (blockerNumber === blocker.JerseyNum || blockerNumber === oldNumber) continue;
+                    if (isTeamRuleReservedForPlayer(blocker, blockerNumber)) continue;
 
                     const blockerCanMove = isNumberAvailable(blocker, blockerNumber, roster);
                     if (!blockerCanMove) continue;
@@ -263,6 +265,7 @@ function assignJersey(player, roster, candidates, teamName) {
 
     if (player.mustRenumberDuplicate) {
         for (let n = MIN_JERSEY; n <= MAX_JERSEY; n++) {
+            if (isTeamRuleReservedForPlayer(player, n)) continue;
             if (isNumberAvailable(player, n, roster)) {
                 player.JerseyNum = n;
                 player.wasRenumberedThisRun = true;
@@ -291,10 +294,8 @@ async function processTeamGroups(teamGroups, teamNames, enableTeamRules) {
     let initialSuboptimal = 0;
 
     for (const team of teamGroups.values()) {
-        for (const side of ["offense", "defense"]) {
-            for (const player of team[side]) {
-                if (!isLegalNumber(player)) initialSuboptimal++;
-            }
+        for (const player of team.all ?? [...team.offense, ...team.defense]) {
+            if (!isLegalNumber(player)) initialSuboptimal++;
         }
     }
 
@@ -571,26 +572,22 @@ async function processTeamGroups(teamGroups, teamNames, enableTeamRules) {
 
     for (const [, team] of teamGroups) {
 
-        for (const side of ["offense", "defense"]) {
+        for (const player of team.all ?? [...team.offense, ...team.defense]) {
 
-            for (const player of team[side]) {
+            if (player.originalJerseyNum !== player.JerseyNum) {
+                stats.totalChanges++;
+            }
 
-                if (player.originalJerseyNum !== player.JerseyNum) {
-                    stats.totalChanges++;
-                }
-
-                if (!isLegalNumber(player)) {
-                    stats.stillSuboptimal++;
-                    if (DEBUG) {
-                        console.log(
-                            "STILL SUBOPTIMAL:",
-                            player.FirstName,
-                            player.LastName,
-                            player.Position,
-                            "#"+player.JerseyNum
-                        );
-                    }
-
+            if (!isLegalNumber(player)) {
+                stats.stillSuboptimal++;
+                if (DEBUG) {
+                    console.log(
+                        "STILL SUBOPTIMAL:",
+                        player.FirstName,
+                        player.LastName,
+                        player.Position,
+                        "#"+player.JerseyNum
+                    );
                 }
 
             }
@@ -790,6 +787,7 @@ async function runTool() {
         player.wasRenumberedThisRun = false;
         player.teamRuleLocked = false;
         player.teamRuleNumber = undefined;
+        player.teamRuleReservedNumbers = new Set();
         player.originalJerseyNum = player.JerseyNum;
     }
 
