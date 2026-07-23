@@ -175,6 +175,8 @@ The tradition engine uses different scoring profiles depending on the number:
 
 Supported traditions include LSU #7 and #18, Texas A&M #12, Ole Miss #38, Ohio State #0, NC State #1, Northwestern #1, Virginia Tech #25, Montana #37, Montana State #41, Georgetown #35, Penn State #0 and #11, USC #55, Michigan #1, Temple and Baylor single digits, Syracuse #44 as reserved, and Army #12 as reserved.
 
+LSU #7 is awarded to one non-NIL playmaker at a time from defensive backs, wide receivers, running backs, tight ends, or linebackers.
+
 LSU #18 can be awarded to any non-NIL Louisiana player on the roster. It only considers juniors and seniors, with class priority ordered as redshirt senior, senior, redshirt junior, then junior before leadership scoring is applied.
 
 ---
