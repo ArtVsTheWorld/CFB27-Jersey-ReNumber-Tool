@@ -17,20 +17,22 @@ For every supported player, the tool:
 3. When possible, prefers similar-looking jersey numbers (for example, a WR wearing #84 will first try #4, then #8, then #14 or #18 before selecting another preferred number).
 4. Falls back to an emergency number if no preferred numbers are available.
 5. Automatically resolves duplicate jersey numbers on the same side of the ball, while preserving base-game QB-QB shared numbers.
-6. Applies supported team traditions, beginning with LSU awarding #7 to its highest-rated eligible player.
+6. Applies supported team traditions using rule-specific scoring for playmakers, leaders, special-teamers, home-state legacy players, and reserved numbers.
 7. Either previews the proposed changes or backs up and saves the updated Dynasty file.
 
 ---
 
 # Player Priority
 
-When multiple players compete for the same jersey number, priority is determined by:
+For generic roster-wide number assignment, when multiple players compete for the same jersey number, priority is determined by:
 
 1. Class Year
 2. Redshirt Status
 3. Overall Rating
 
 The only exceptions are QBs (always pick their numbers ahead of other positions regardless of age or OVR) and FBs (always pick last regardless of age or OVR). This produces realistic roster-wide numbering without manual intervention. This helps simulate how jersey numbers are typically assigned within a real college football program.
+
+Team-specific traditions use their own scoring logic before the generic assignment passes run.
 
 ---
 
@@ -95,12 +97,12 @@ The tool only changes players whose jersey numbers need to be updated. Running i
 
 ## Why wasn't my offensive lineman renumbered?
 
-The current version only evaluates the following positions:
+Generic position renumbering only evaluates the following positions:
 
 - Offense: QB, HB, WR, TE, FB
 - Defense: DE, DT, MIKE, OLB, CB, S
 
-OL, Kickers, and Punters are intentionally excluded.
+OL, Kickers, Punters, and Long Snappers are intentionally excluded from generic renumbering, but they may still be considered for configured team traditions.
 
 ---
 
@@ -149,13 +151,33 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 
 ---
 
+# Team Traditions
+
+When enabled, team-specific traditions run before the generic jersey passes. Awarded players are locked so later passes cannot undo the tradition, and configured tradition numbers are reserved so generic promotions or fallback assignments cannot give those numbers to non-winners.
+
+The tradition engine uses different scoring profiles depending on the number:
+
+- Playmaker traditions weigh overall rating, impact-player status, development trait, awards, game rating, and position production.
+- Leadership traditions weigh captain fields, captain patches, personality, mental abilities, awareness, toughness, confidence, class year, redshirt history, years with team, games played, games started, and downs played.
+- Special-teams traditions weigh return production, kick-return ability, tackling, pursuit, speed, stamina, toughness, games played, and low-starting role-player usage.
+- Home-state legacy traditions require matching home state and then weigh leadership, toughness, class year, and years with team.
+- Reserved-number traditions move eligible non-NIL players off numbers that should generally not be issued.
+
+Supported traditions include LSU #7 and #18, Texas A&M #12, Ole Miss #38, Ohio State #0, NC State #1, Northwestern #1, Virginia Tech #25, Montana #37, Montana State #41, Georgetown #35, Penn State #0 and #11, USC #55, Michigan #1, Temple and Baylor single digits, Syracuse #44 as reserved, and Army #12 as reserved.
+
+LSU #7 is awarded to one non-NIL playmaker at a time from defensive backs, wide receivers, running backs, tight ends, or linebackers.
+
+LSU #18 can be awarded to any non-NIL Louisiana player on the roster. It only considers juniors and seniors, with class priority ordered as redshirt senior, senior, redshirt junior, then junior before leadership scoring is applied.
+
+---
+
 # Known Limitations
 
-- Offensive linemen (LT, LG, C, RG, RT) are intentionally excluded. I feel the game does an ok job here.
-- Specialists (K/P) are intentionally excluded. As a result, a team may legitimately have three players wearing the same number (offense, defense, and specialist).
+- Offensive linemen (LT, LG, C, RG, RT) are intentionally excluded from generic position renumbering. They can still be considered for configured team traditions.
+- Specialists (K/P/LS) are intentionally excluded from generic position renumbering. They can still be considered for configured team traditions.
 - QBs on the same team will sometime share numbers. This appears to be base game logic to prevent QBs from taking 20s or higher numbers.
-- Retired or honored jersey numbers are not tracked.
-- Jersey assignments are based solely on roster composition and position; depth chart order is not considered.
+- Walk-on status, weekly award selections, teammate voting, and depth chart order are not directly available in the save data, so those traditions are approximated from roster attributes and stats.
+- Retired or symbolic reserve handling is limited to configured team traditions.
 
 ---
 
@@ -164,7 +186,7 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 ## Version 2.0
 
 - Added Preview Only and Apply Changes run modes.
-- Added optional team-specific jersey rules, starting with LSU's #7 tradition. (Awarded to the single highest overall player of an eligible position on the team. Will move other players wearing #7 to different numbers.)
+- Added optional team-specific jersey rules with scoring profiles for playmaker, leadership, special-teams, home-state legacy, single-digit, lineage, and reserved-number traditions.
 - Added color-coded change, duplicate, displacement, and status logging.
 - Added player class year to change logging.
 - Reworked the final summary around clearer roster and change metrics.
@@ -175,7 +197,7 @@ Promotions never occur into fallback numbers and never create duplicate jerseys.
 
 # Planned Additions
 
-- Retired number support.
+- Configurable tradition weights and enabled tradition list.
 - Configurable number ranges/promotion chances.
 - More team specific jersey rules.
 
